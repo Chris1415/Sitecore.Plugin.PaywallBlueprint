@@ -2,7 +2,7 @@
   "schema_version": 6,
   "run_id": "20260513T093404Z",
   "created_at": "2026-05-13T09:34:04Z",
-  "updated_at": "2026-05-13T13:55:00Z",
+  "updated_at": "2026-05-13T14:05:00Z",
   "product_slug": "paywall-blueprint",
   "product_root": "products/paywall-blueprint",
   "status": "architecture_ready",
@@ -19,8 +19,13 @@
   "ui_design": {
     "proposal_count": 1,
     "divergence": "subtle",
-    "variant_paths": [],
-    "selected_variant_path": null
+    "variant_paths": [
+      "products/paywall-blueprint/project-planning/ui-design/ui-design-20260513T093404Z-v1.md"
+    ],
+    "selected_variant_path": "products/paywall-blueprint/project-planning/ui-design/ui-design-20260513T093404Z-v1.md",
+    "selected_poc_path": "products/paywall-blueprint/pocs/poc-v1-prd000",
+    "variant_name": "Stock Blok",
+    "aesthetic_direction": "neutral Blok-stock identity"
   },
   "source": {
     "kind": "raw_idea",
@@ -112,6 +117,14 @@
       "agent": "04-software-architect",
       "entered_at": "2026-05-13T13:00:00Z",
       "exited_at": "2026-05-13T13:55:00Z",
+      "outcome": "completed",
+      "error": null
+    },
+    {
+      "stage": "ui_ready",
+      "agent": "05-ui-designer",
+      "entered_at": "2026-05-13T13:55:00Z",
+      "exited_at": "2026-05-13T14:05:00Z",
       "outcome": "completed",
       "error": null
     }
