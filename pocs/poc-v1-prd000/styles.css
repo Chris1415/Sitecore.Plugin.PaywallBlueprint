@@ -1,0 +1,535 @@
+/* =============================================================
+ * Paywall Blueprint POC — v1 "Stock Blok"
+ * Token source: Blok semantic tokens (Sitecore design system)
+ *   reference: sitecore:blok-theming skill, captured 2026-05-13
+ *   reference URL: https://blok.sitecore.com/theming
+ * Strategy: copied-tokens fallback (no public Blok theme CDN documented
+ * by the skill at capture time). Tokens use shadcn/Tailwind v4 Nova
+ * preset HSL triplets so dark mode flips via `.dark` on <html>.
+ * Hex values are NOT introduced in component code — only in :root
+ * variable definitions, exactly as the Nova preset emits them.
+ * ============================================================= */
+
+:root {
+  /* Color tokens (Nova preset light) — HSL triplets per shadcn convention */
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 240 5.9% 10%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 240 5.9% 10%;
+
+  /* Radius scale */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* Spacing scale (Tailwind v4 / Nova) */
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Geist Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Geist Mono",
+    monospace;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 240 5.9% 10%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 240 4.9% 83.9%;
+}
+
+/* =============================================================
+ * Base
+ * ============================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =============================================================
+ * @blok/topbar — composite block anatomy
+ * ============================================================= */
+
+.blok-topbar {
+  display: flex;
+  align-items: center;
+  height: 56px;
+  padding: 0 var(--spacing-6);
+  border-bottom: 1px solid hsl(var(--border));
+  background-color: hsl(var(--background));
+}
+
+.blok-topbar__label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+}
+
+/* =============================================================
+ * Page container
+ * ============================================================= */
+
+.page-shell {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: var(--spacing-6) var(--spacing-6) var(--spacing-8);
+}
+
+/* =============================================================
+ * @blok/alert — banner anatomy
+ * ============================================================= */
+
+.blok-alert {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  align-items: start;
+  column-gap: var(--spacing-3);
+  row-gap: 0;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+.blok-alert__icon {
+  width: 16px;
+  height: 16px;
+  color: currentColor;
+  margin-top: 2px;
+}
+
+.blok-alert__title {
+  grid-column: 2;
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  margin: 0;
+  line-height: 1.4;
+}
+
+.blok-alert__description {
+  grid-column: 2;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  margin: 2px 0 0;
+  line-height: 1.5;
+}
+
+.banner-region {
+  margin-top: var(--spacing-4);
+}
+
+/* =============================================================
+ * @blok/card — primitive anatomy
+ * ============================================================= */
+
+.blok-card {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-6);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* shadow-sm — iframe-safe */
+}
+
+.card-region--free {
+  margin-top: var(--spacing-6);
+}
+
+.card-region--gated {
+  margin-top: var(--spacing-6);
+  /* Min-height absorbs largest resolved state (seats-full) per ADR-0007.
+   * Prevents layout shift on entitlement resolve. */
+  min-height: 320px;
+}
+
+/* =============================================================
+ * @blok/separator
+ * ============================================================= */
+
+.blok-separator {
+  height: 1px;
+  background-color: hsl(var(--border));
+  border: 0;
+  margin: var(--spacing-6) 0 0;
+  width: 100%;
+}
+
+/* =============================================================
+ * @blok/badge anatomy
+ * ============================================================= */
+
+.blok-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.blok-badge--secondary {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.blok-badge--default {
+  background-color: hsl(var(--primary));
+  /* Use --background fallback for foreground to dodge Nova-preset
+   * --primary-foreground collapse in dark mode (per blok-theming skill). */
+  color: hsl(var(--background));
+}
+
+/* =============================================================
+ * State content layout (shared across all gated states)
+ * ============================================================= */
+
+.state-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.state-content__icon {
+  margin-top: var(--spacing-3);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.state-content__icon--neutral {
+  color: hsl(var(--muted-foreground));
+}
+
+.state-content__icon--positive {
+  color: hsl(var(--primary));
+}
+
+.state-content__headline {
+  margin: var(--spacing-3) 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: hsl(var(--foreground));
+  line-height: 1.25;
+}
+
+.state-content__counter {
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+.state-content__body {
+  margin: var(--spacing-2) 0 0;
+  font-size: 14px;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.6;
+  max-width: 60ch;
+}
+
+.state-content__cta-row {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-6);
+  flex-wrap: wrap;
+}
+
+/* =============================================================
+ * @blok/button anatomy
+ * ============================================================= */
+
+.blok-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 120ms ease-out, transform 80ms ease-out;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.blok-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--ring));
+}
+
+.blok-button:active {
+  transform: scale(0.98);
+}
+
+.blok-button--default {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--background));
+}
+
+.blok-button--default:hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
+
+.blok-button--secondary {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.blok-button--secondary:hover {
+  background-color: hsl(var(--secondary) / 0.8);
+}
+
+.blok-button__trailing-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.blok-button__leading-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 2px;
+}
+
+/* =============================================================
+ * @blok/skeleton anatomy
+ * ============================================================= */
+
+.blok-skeleton {
+  background-color: hsl(var(--muted));
+  border-radius: var(--radius-md);
+  animation: blok-pulse 1600ms cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.blok-skeleton--circle {
+  border-radius: 9999px;
+}
+
+.blok-skeleton--pill {
+  border-radius: 9999px;
+}
+
+@keyframes blok-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.skeleton-state {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.skeleton-state__row-cta {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-3);
+}
+
+/* =============================================================
+ * Free section composition
+ * ============================================================= */
+
+.free-section__headline {
+  margin: var(--spacing-3) 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: hsl(var(--foreground));
+  line-height: 1.25;
+}
+
+.free-section__body {
+  margin: var(--spacing-2) 0 0;
+  font-size: 14px;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.6;
+  max-width: 64ch;
+}
+
+.free-section__cta-row {
+  margin-top: var(--spacing-6);
+}
+
+/* =============================================================
+ * State picker (POC-only chrome)
+ * ============================================================= */
+
+.state-picker {
+  background-color: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 8px var(--spacing-6);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.state-picker__label {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+  margin-right: 8px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.state-picker__link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  text-decoration: none;
+  border: 1px solid hsl(var(--border));
+  font-weight: 500;
+  font-size: 12px;
+  transition: background-color 120ms ease-out;
+}
+
+.state-picker__link:hover {
+  background-color: hsl(var(--accent));
+}
+
+.state-picker__link--active {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--background));
+  border-color: hsl(var(--primary));
+}
+
+.state-picker__link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--ring));
+}
+
+/* =============================================================
+ * Lucide icon sizing helper
+ * ============================================================= */
+
+[data-lucide] {
+  stroke-width: 2;
+}
+
+/* =============================================================
+ * Mobile breakpoint — graceful degrade
+ * ============================================================= */
+
+@media (max-width: 767px) {
+  .page-shell {
+    padding: var(--spacing-4) var(--spacing-4) var(--spacing-6);
+  }
+
+  .blok-card {
+    padding: var(--spacing-4);
+  }
+
+  .state-content__cta-row {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .state-content__cta-row .blok-button {
+    width: 100%;
+  }
+
+  .state-content__body,
+  .free-section__body {
+    max-width: 100%;
+  }
+
+  .state-picker {
+    padding: 8px var(--spacing-4);
+  }
+}
+
+/* =============================================================
+ * Reduced motion
+ * ============================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .blok-skeleton {
+    animation: none;
+  }
+  .blok-button {
+    transition: none;
+  }
+}

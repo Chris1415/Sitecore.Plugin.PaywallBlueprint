@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Paywall Blueprint — allowed (mobile preview) (POC v1)</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* Mobile-preview viewport frame: 390x844 (iPhone 14-ish). The actual
+         responsive rules live in styles.css under @media (max-width: 767px).
+         This wrapper just clamps the visual width so the operator can see
+         the degrade-to-mobile composition on a desktop monitor. */
+      body.mobile-preview {
+        background-color: hsl(var(--muted));
+        min-height: 100vh;
+        padding: 24px 0;
+      }
+      body.mobile-preview .mobile-frame {
+        width: 390px;
+        margin: 0 auto;
+        background-color: hsl(var(--background));
+        border: 1px solid hsl(var(--border));
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+      }
+      body.mobile-preview .blok-topbar {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      body.mobile-preview .page-shell {
+        max-width: 100%;
+        padding: 16px 16px 24px;
+      }
+      body.mobile-preview .blok-card {
+        padding: 16px;
+      }
+      body.mobile-preview .state-content__cta-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      body.mobile-preview .state-content__cta-row .blok-button {
+        width: 100%;
+      }
+      body.mobile-preview .state-content__body,
+      body.mobile-preview .free-section__body {
+        max-width: 100%;
+      }
+      body.mobile-preview .mobile-caption {
+        max-width: 390px;
+        margin: 12px auto 0;
+        text-align: center;
+        font-size: 12px;
+        color: hsl(var(--muted-foreground));
+      }
+    </style>
+  </head>
+  <body class="mobile-preview">
+    <nav class="state-picker" aria-label="POC state preview" style="max-width: 100%;">
+      <span class="state-picker__label">Preview state</span>
+      <a class="state-picker__link" href="index.html">Loading (skeleton)</a>
+      <a class="state-picker__link" href="state-allowed.html">Allowed</a>
+      <a class="state-picker__link" href="state-no-subscription.html">No subscription</a>
+      <a class="state-picker__link" href="state-seats-full.html">Seats full</a>
+      <a class="state-picker__link" href="state-unassigned.html">User unassigned</a>
+      <a class="state-picker__link" href="state-demo-mode.html">Demo mode</a>
+      <a class="state-picker__link" href="state-error.html">Error</a>
+      <a class="state-picker__link state-picker__link--active" href="state-allowed-mobile.html">Mobile preview</a>
+    </nav>
+
+    <div class="mobile-frame">
+      <header class="blok-topbar" role="banner">
+        <span class="blok-topbar__label">Paywall Blueprint</span>
+      </header>
+
+      <main class="page-shell">
+        <section
+          class="blok-card card-region--free"
+          role="region"
+          aria-labelledby="free-section-heading"
+        >
+          <span class="blok-badge blok-badge--secondary">Free</span>
+          <h2 id="free-section-heading" class="free-section__headline">
+            Inventory at a glance
+          </h2>
+          <p class="free-section__body">
+            This is where your free tier lives. Adopters of the blueprint
+            replace this card with a real free feature — a counter, a status
+            tile, anything that ships value without a paid plan.
+          </p>
+          <div class="free-section__cta-row">
+            <button
+              type="button"
+              class="blok-button blok-button--secondary"
+              aria-label="Placeholder action — does nothing"
+              style="width: 100%;"
+            >
+              <i
+                data-lucide="bar-chart-3"
+                class="blok-button__leading-icon"
+                aria-hidden="true"
+              ></i>
+              View placeholder report
+            </button>
+          </div>
+        </section>
+
+        <hr class="blok-separator" />
+
+        <section
+          class="blok-card card-region--gated"
+          role="region"
+          aria-labelledby="gated-section-heading"
+        >
+          <span class="blok-badge blok-badge--default">Premium</span>
+          <div class="state-content">
+            <span class="state-content__icon state-content__icon--positive">
+              <i data-lucide="circle-check" aria-hidden="true"></i>
+            </span>
+            <h2 id="gated-section-heading" class="state-content__headline">
+              Welcome, Christian
+            </h2>
+            <p class="state-content__body">
+              Your tenant Hahn Solo Demo has full access. Replace this card
+              with your gated feature.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <p class="mobile-caption">
+      Mobile preview — 390px viewport. Marketplace iframe rarely lands here;
+      degrade is single-column scroll with full-width CTAs (per spec § 5).
+    </p>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      if (window.lucide) window.lucide.createIcons();
+    </script>
+  </body>
+</html>

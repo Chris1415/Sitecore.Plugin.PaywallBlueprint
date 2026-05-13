@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Paywall Blueprint — demo mode (POC v1)</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav class="state-picker" aria-label="POC state preview">
+      <span class="state-picker__label">Preview state</span>
+      <a class="state-picker__link" href="index.html">Loading (skeleton)</a>
+      <a class="state-picker__link" href="state-allowed.html">Allowed</a>
+      <a class="state-picker__link" href="state-no-subscription.html">No subscription</a>
+      <a class="state-picker__link" href="state-seats-full.html">Seats full</a>
+      <a class="state-picker__link" href="state-unassigned.html">User unassigned</a>
+      <a class="state-picker__link state-picker__link--active" href="state-demo-mode.html">Demo mode</a>
+      <a class="state-picker__link" href="state-error.html">Error</a>
+      <a class="state-picker__link" href="state-allowed-mobile.html">Mobile preview</a>
+    </nav>
+
+    <header class="blok-topbar" role="banner">
+      <span class="blok-topbar__label">Paywall Blueprint</span>
+    </header>
+
+    <main class="page-shell">
+      <!-- Demo-mode banner (Surface 8) — top placement per spec § 3.8 -->
+      <div class="banner-region">
+        <div class="blok-alert" role="alert">
+          <i
+            data-lucide="info"
+            class="blok-alert__icon"
+            aria-hidden="true"
+          ></i>
+          <p class="blok-alert__title">Paywall disabled — demo mode</p>
+          <p class="blok-alert__description">
+            Set NEXT_PUBLIC_PAYWALL_ENABLED=true to evaluate entitlements.
+          </p>
+        </div>
+      </div>
+
+      <section
+        class="blok-card card-region--free"
+        role="region"
+        aria-labelledby="free-section-heading"
+      >
+        <span class="blok-badge blok-badge--secondary">Free</span>
+        <h2 id="free-section-heading" class="free-section__headline">
+          Inventory at a glance
+        </h2>
+        <p class="free-section__body">
+          This is where your free tier lives. Adopters of the blueprint replace
+          this card with a real free feature — a counter, a status tile,
+          anything that ships value without a paid plan.
+        </p>
+        <div class="free-section__cta-row">
+          <button
+            type="button"
+            class="blok-button blok-button--secondary"
+            aria-label="Placeholder action — does nothing"
+          >
+            <i
+              data-lucide="bar-chart-3"
+              class="blok-button__leading-icon"
+              aria-hidden="true"
+            ></i>
+            View placeholder report
+          </button>
+        </div>
+      </section>
+
+      <hr class="blok-separator" />
+
+      <!-- In demo mode the gate passes through children verbatim (ADR-0004).
+           We render the same welcome content shape as state-allowed.html. -->
+      <section
+        class="blok-card card-region--gated"
+        role="region"
+        aria-labelledby="gated-section-heading"
+      >
+        <span class="blok-badge blok-badge--default">Premium</span>
+        <div class="state-content">
+          <span class="state-content__icon state-content__icon--positive">
+            <i data-lucide="circle-check" aria-hidden="true"></i>
+          </span>
+          <h2 id="gated-section-heading" class="state-content__headline">
+            Welcome, Christian
+          </h2>
+          <p class="state-content__body">
+            Your tenant Hahn Solo Demo has full access. Replace this card with
+            your gated feature.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      if (window.lucide) window.lucide.createIcons();
+    </script>
+  </body>
+</html>
