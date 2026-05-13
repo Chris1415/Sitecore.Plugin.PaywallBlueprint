@@ -69,9 +69,12 @@
   "architecture": {
     "extension_points": [
       {
-        "extension_point": "xmc:fullscreen",
-        "route_url": "/",
-        "registered": false
+        "type": "xmc:fullscreen",
+        "route": "/full-page",
+        "displayLabel": "Full screen — SitecoreAI",
+        "registered": true,
+        "registered_at": "2026-05-13T20:55:00Z",
+        "notes": "Operator registered with route /full-page (canonical xmc:fullscreen URL pattern per sitecore:marketplace-sdk-extension-routes). Original PRD-000 § 4c-6 and task T008 had /; corrected post-T007 when Cloud Portal sent /full-page?organizationId=...&marketplaceAppTenantId=... to the dev server. site/app/full-page/page.tsx now re-exports the root shell. ngrok tunnel used to expose localhost:3000 to Cloud Portal."
       }
     ]
   },
@@ -151,9 +154,25 @@
     "target_directory": "site",
     "branch_name": "prd-000",
     "remote_url": "https://github.com/Chris1415/Sitecore.Plugin.PaywallBlueprint.git",
-    "status": "in_progress",
+    "status": "tranche_a_awaiting_operator_gate",
     "current_tranche": "A",
-    "resumed_from_stage": null
+    "resumed_from_stage": null,
+    "tranche_a_progress": {
+      "T001": "completed",
+      "T002": "completed",
+      "T003": "completed",
+      "T004": "completed",
+      "T005": "completed",
+      "T006": "completed",
+      "T007": "pending_operator",
+      "T008": "completed",
+      "T009": "completed",
+      "T010a": "completed",
+      "T010b": "completed",
+      "T011": "completed",
+      "T012": "pending_operator",
+      "notes": "T008-T011 completed 2026-05-13. T011 gate: lint 0 errors (3 pre-existing upstream warnings), tsc exit 0, test 8/8 pass, build exit 0. Stopped at T012 (operator action required — real-tenant iframe install)."
+    }
   },
   "smoke_outcomes": {},
   "operator_attention": [
