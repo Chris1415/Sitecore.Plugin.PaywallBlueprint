@@ -15,17 +15,22 @@ let _store: SupabaseStore | null = null;
 
 /**
  * Returns the module-level singleton SupabaseStore, lazily constructing it
- * from NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY on first call.
+ * from NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.
  *
- * These env vars may be unset during development / CI (T015 is an operator action);
- * the singleton is only called at runtime when the gate evaluates an entitlement.
+ * Supabase v2 renamed `ANON_KEY` to `PUBLISHABLE_KEY` and `SERVICE_ROLE_KEY`
+ * to `SECRET_KEY`. We prefer the new names and fall back to the old for
+ * backward compatibility — same JWT semantics either way.
+ *
+ * These env vars may be unset during development / CI; the singleton is only
+ * called at runtime when the gate evaluates an entitlement.
  */
 export function getDefaultStore(): SupabaseStore {
   if (_store) return _store;
-  const client = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const publishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const client = createClient(url, publishableKey);
   _store = new SupabaseStore(client);
   return _store;
 }

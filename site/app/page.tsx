@@ -12,6 +12,7 @@
  * sitecore:blok-theming — bg-background, text-foreground, semantic tokens only
  */
 
+import Link from "next/link";
 import Topbar from "@/components/bloks/top-bar";
 import { Separator } from "@/components/ui/separator";
 import { FreeSection } from "@/components/free-section";
@@ -40,6 +41,19 @@ export default function Page() {
         {/* Gated section — hardcoded "allowed" welcome in Tranche A */}
         {/* Tranche C (T035) wraps this in <PaywallGate> */}
         <GatedSection />
+
+        {/* Dev affordance — Tranche B helper; removed at Tranche E if not adopted. */}
+        {/* Lets the operator navigate from the iframe shell to the SDK probe UI */}
+        {/* without needing to re-register a different Cloud Portal route. */}
+        <div className="mt-6 pt-4 border-t border-border text-xs text-muted-foreground flex items-center justify-between">
+          <span>Development helpers</span>
+          <Link
+            href="/debug"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            Open SDK probes →
+          </Link>
+        </div>
       </main>
     </div>
   );

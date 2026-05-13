@@ -192,8 +192,17 @@
       "kind": "question",
       "item": "Tenant-id durability across reinstalls + user-identity stability + email exposure via application.context \u2014 real-tenant probe required before PRD-001; pause for SDK Sandbox detour if blocking",
       "raised_at": "2026-05-13T09:34:04Z",
-      "resolved_at": null,
+      "resolved_at": "2026-05-13T21:30:00Z",
       "references": "brain-dump \u00a7 OQ5; assumptions A1, A2; PRD-000 OA-1"
+    },
+    {
+      "stage": "implement",
+      "severity": "info",
+      "kind": "resolved",
+      "item": "RESOLVED (OA-1 + SDK-shape divergence): runtime probe captured shapes for application.context + host.user + pages.context. Fixtures at project-planning/architecture/sdk-fixtures/ (sanitized). Tenant entitlement key chosen: application.context.marketplaceAppTenantId (Cloud Portal app-installation ID; one install = one subscription). User display chain: host.user.given_name -> name -> email.split('@')[0] -> 'there'. Tenant display chain: resourceAccess[0].tenantDisplayName -> tenantName -> truncated marketplaceAppTenantId -> 'your tenant'. User identity requires a SEPARATE client.query('host.user') call — MarketplaceProvider must be expanded at T023 to query both.",
+      "raised_at": "2026-05-13T21:30:00Z",
+      "resolved_at": "2026-05-13T21:30:00Z",
+      "references": "project-planning/architecture/sdk-fixtures/{application-context,host-user,pages-context}.json + T014 verification report"
     },
     {
       "stage": "discovery",
