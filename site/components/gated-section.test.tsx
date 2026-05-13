@@ -28,6 +28,13 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { GatedSection } from './gated-section';
 
+// Mock PaywallGate to render children directly — these tests are about the
+// display chain (pickUserDisplay / pickTenantDisplay) not the gate evaluation.
+// T036a covers PaywallGate in isolation.
+vi.mock('@/src/lib/paywall/PaywallGate', () => ({
+  PaywallGate: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 // ---------------------------------------------------------------------------
 // Mock the entire providers/marketplace module.
 // We provide both useAppContext and useHostUser since T023 adds useHostUser.
