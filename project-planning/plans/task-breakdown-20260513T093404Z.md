@@ -68,6 +68,16 @@ Each epic maps to a tranche from PRD § 12. Tranches are executed strictly seque
 
 ---
 
+### REVISION NOTICE — 2026-05-13 (post-QA, pre-implement)
+
+Two scope revisions landed after the initial task breakdown was written. Tasks below carry their original IDs and structure — read these revisions IN CONJUNCTION when implementing:
+
+**Revision A — Tenant-only entitlement (ADR-0011).** Per-user seat enforcement is deferred to PRD-002. PRD-000's `SupabaseStore.getEntitlement` consults the `tenants` table only and returns `allowed | tenant_no_subscription`. The `seats` table is REMOVED from PRD-000 schema (T016). The 4 UX state components ALL still ship in PRD-000 — but `SeatsFullState` (T029) and `UserUnassignedState` (T030) are **design-reference components** reachable only via direct render (`pnpm seed:state seats-full | unassigned`), NOT via the entitlement evaluator. Affected tasks: **T016** (2-table schema), **T017** (interface comments — types remain 4-variant for forward-compat), **T019** (2-branch evaluator, ignore `userId` param), **T020a** (2 happy paths + error, not 4), **T021** (state-switcher CLI supports `allowed | no-sub` via evaluator + `seats-full | unassigned` via direct render), **T029 + T030** (descriptions: design-reference only), **T037a** (component tests stay; gate-evaluator tests narrow to 2 live + skeleton + throw), **T039** (challenge gate rubric per PRD § 12 — 2 live + 2 design-ref + error boundary).
+
+**Revision B — Stripe direct as v1 provider (ADR-0003 revised).** Provider switched from Lemon Squeezy to Stripe direct (Stripe Billing + Entitlements API + Customer Portal) after operator research at `storage/paywall-providers-research-2026-05-13.md`. PRD-000 itself has NO real provider — only the type-only `PaymentProvider` placeholder. Affected tasks: **T017** (placeholder comment now mentions Stripe as PRD-001 implementation), **T047 README** (provider name in README quickstart + adoption guide). Stripe Customer Portal makes PRD-003 a one-API-call surface (post-PRD-000 — out of scope here). The `processed_events` table is named generically (Stripe `event.id` PK with unique-on-conflict idempotency per research § 8.3); replaces the originally-named `purchase_events`.
+
+---
+
 ### Tranche A — Scaffold + visual shell
 
 ---
@@ -243,43 +253,62 @@ Each epic maps to a tranche from PRD § 12. Tranches are executed strictly seque
 - **Expected Output:** `site/.env.local` has real values (gitignored). `site/.env.example` has documented placeholders (committed).
 - **Depends on:** T013
 
-#### T016 — Create `supabase/schema.sql` (3-table schema + RLS placeholder policies)
+#### T016 — Create `supabase/schema.sql` (2-table schema + RLS placeholder policies — REVISED per ADR-0011)
 
-- **Description:** Create `products/paywall-blueprint/site/supabase/schema.sql` with the schema from PRD § 10 + ADR-0009 RLS posture + ADR-0010 idempotent re-run patterns. The file MUST:
+- **Description:** Create `products/paywall-blueprint/site/supabase/schema.sql` with the schema from PRD § 10 (REVISED — 2 tables, not 3) + ADR-0009 RLS posture + ADR-0010 idempotent re-run patterns + ADR-0011 tenant-only entitlement. The file MUST:
 
-  1. Start with a header comment naming the blueprint version + ADR references (0007/0008/0009/0010).
-  2. Use `CREATE TABLE IF NOT EXISTS` for all three tables.
+  1. Start with a header comment naming the blueprint version + ADR references (0007/0008/0009/0010/0011).
+  2. Use `CREATE TABLE IF NOT EXISTS` for both tables.
   3. Use `DROP POLICY IF EXISTS` before each `CREATE POLICY` (idempotent re-runs per ADR-0010).
-  4. Tables: `tenants(tenant_id PK, plan, seats_total, status CHECK IN ('active','cancelled','past_due'), period_end, created_at, updated_at)`, `seats(tenant_id FK CASCADE, user_id, assigned_at, last_seen_at; composite PK (tenant_id, user_id))`, `purchase_events(id SERIAL PK, tenant_id, provider_event_id UNIQUE, raw_payload JSONB, processed_at)`.
-  5. `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` on all three tables.
-  6. Policies: `CREATE POLICY "anon_read_tenants" ON tenants FOR SELECT TO anon USING (true);` + same for `seats`. NO anon policy on `purchase_events` (service-role only). Comment `-- REPLACE BEFORE PRODUCTION` block above the placeholder policies.
-- **Expected Output:** `site/supabase/schema.sql` committed. Operator runs the file in the Supabase SQL editor (manual paste); confirms three tables created + RLS enabled.
+  4. **Tables (2 only — `seats` removed per ADR-0011):**
+     - `tenants(tenant_id TEXT PK, stripe_customer_id TEXT NULL, subscription_id TEXT NULL, plan TEXT NOT NULL DEFAULT 'starter', seats_total INTEGER NOT NULL DEFAULT 1, status TEXT NOT NULL CHECK IN ('active','cancelled','past_due'), period_end TIMESTAMPTZ NULL, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())`. Note: `stripe_customer_id` + `subscription_id` are NULL in PRD-000 (populated by PRD-001 webhook); `seats_total` is unused by PRD-000 evaluator but kept for forward-compat.
+     - `processed_events(event_id TEXT PK, processed_at TIMESTAMPTZ DEFAULT NOW())`. Empty in PRD-000; provisioned for PRD-001 Stripe webhook idempotency (Stripe `event.id` is unique).
+  5. `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` on both tables.
+  6. Policies: `CREATE POLICY "anon_read_tenants" ON tenants FOR SELECT TO anon USING (true);` only. NO anon policy on `processed_events` (service-role only — PRD-001 webhook handler writes via service role). Comment `-- REPLACE BEFORE PRODUCTION` block above the placeholder policy.
+  7. Add a header comment block documenting: "The `seats` table lands in PRD-002 (ADR-0011). Do NOT add it to this file pre-PRD-002."
+- **Expected Output:** `site/supabase/schema.sql` committed. Operator runs the file in the Supabase SQL editor (manual paste); confirms 2 tables created + RLS enabled. Verify `seats` table is NOT present (`SELECT * FROM seats` returns an error — expected).
 - **Depends on:** T015
 
 #### T017 — Implement `EntitlementStore` / `EntitlementSeed` / `EntitlementResult` types
 
-- **Description:** Create `site/src/lib/paywall/types.ts` with the three exports per architecture § 5.2 / ADR-0002 + the `PaymentProvider` type-only placeholder per ADR-0003. NOTE: the scaffold has NO `src/` directory by default (Next.js 16 layout uses top-level `app/`, `components/`, `lib/`). Create `site/src/lib/paywall/` as a NEW directory. The portable library lives under `src/lib/paywall/` per PRD § 9 and is consumed by `app/*` as if external — do NOT hoist into `components/`. Add a header comment block flagging `PaymentProvider` as a type-only placeholder ("PRD-000 ships the contract; PRD-001 ships the first implementation" per ADR-0003).
+- **Description:** Create `site/src/lib/paywall/types.ts` with the three exports per architecture § 5.2 / ADR-0002 + the `PaymentProvider` type-only placeholder per ADR-0003 (revised: **Stripe direct** as PRD-001 v1 adapter). NOTE: the scaffold has NO `src/` directory by default (Next.js 16 layout uses top-level `app/`, `components/`, `lib/`). Create `site/src/lib/paywall/` as a NEW directory. The portable library lives under `src/lib/paywall/` per PRD § 9 and is consumed by `app/*` as if external — do NOT hoist into `components/`. Add a header comment block flagging `PaymentProvider` as a type-only placeholder ("PRD-000 ships the contract; PRD-001 ships **Stripe direct** as the first implementation — Stripe Billing + Entitlements API + Customer Portal" per ADR-0003 revised). Also add a comment block on `EntitlementResult` flagging that PRD-000 evaluator only returns the first 2 variants (`allowed | tenant_no_subscription`); the seat-related variants are forward-looking per ADR-0011, returned by PRD-002's extended evaluator.
 
   Exact types from architecture § 5.2:
 
   ```typescript
   export interface EntitlementStore {
+    /**
+     * PRD-000 (ADR-0011): consults `tenants` table only. The `userId` parameter is
+     * accepted for interface stability across PRDs but IGNORED in PRD-000. PRD-002
+     * extends with the seats branch.
+     */
     getEntitlement(tenantId: string, userId: string): Promise<EntitlementResult>;
   }
   export interface EntitlementSeed {
     seedTenant(args: { tenantId: string; plan: string; seatsTotal: number; status: 'active' | 'cancelled' | 'past_due'; }): Promise<void>;
-    seedSeat(args: { tenantId: string; userId: string }): Promise<void>;
+    // seedSeat lands in PRD-002 alongside the seats table (ADR-0011). Do NOT
+    // implement in PRD-000; the state-switcher CLI's seats-full/unassigned
+    // invocations render the components directly without seeding.
     clearState(): Promise<void>;
   }
   export type EntitlementResult =
+    // PRD-000 evaluator returns one of:
     | { status: 'allowed' }
     | { status: 'tenant_no_subscription' }
+    // Below: forward-compat variants. PRD-000 evaluator NEVER returns these.
+    // The state components ship and are rendered via direct invocation by
+    // the state-switcher CLI (pnpm seed:state seats-full | unassigned).
+    // PRD-002's extended evaluator wires the routing.
     | { status: 'tenant_active_seats_full'; seatsTotal: number }
     | { status: 'tenant_active_user_unassigned' };
   export interface PaymentProvider {
-    generatePurchaseUrl(args: { tenantId: string; plan?: string; returnUrl?: string }): Promise<string>;
+    // v1 implementation: Stripe direct (PRD-001).
+    // Surface mirrors the Stripe wiring shape from
+    // storage/paywall-providers-research-2026-05-13.md § 8.
+    generateCheckoutUrl(args: { tenantId: string; userEmail: string; priceId?: string; returnUrl?: string }): Promise<string>;
+    generatePortalUrl(args: { tenantId: string; returnUrl: string }): Promise<string>;
     verifyWebhookSignature(rawBody: string, signature: string): Promise<boolean>;
-    parseWebhookPayload(rawBody: string): Promise<{ providerEventId: string; tenantId: string; kind: 'subscription_created' | 'subscription_updated' | 'subscription_cancelled'; payload: unknown }>;
+    parseWebhookPayload(rawBody: string): Promise<{ providerEventId: string; tenantId: string; kind: 'subscription_created' | 'subscription_updated' | 'subscription_cancelled' | 'payment_failed' | 'payment_succeeded'; payload: unknown }>;
   }
   ```
 - **Expected Output:** `site/src/lib/paywall/types.ts` exists with all four exports. `tsc --noEmit` exits 0.
@@ -291,9 +320,26 @@ Each epic maps to a tranche from PRD § 12. Tranches are executed strictly seque
 - **Expected Output:** `site/package.json` includes `@supabase/supabase-js`. `tsc --noEmit` exits 0.
 - **Depends on:** T015
 
-#### T019 — Implement `SupabaseStore` adapter
+#### T019 — Implement `SupabaseStore` adapter (REVISED per ADR-0011 — tenant-only evaluator)
 
-- **Description:** Create `site/src/lib/paywall/stores/SupabaseStore.ts` implementing BOTH `EntitlementStore` AND `EntitlementSeed` per architecture § 5.5. The class accepts a `SupabaseClient` in its constructor. Implement `getEntitlement(tenantId, userId)` with the three sequential calls (tenant select → seat select → seat count) per architecture § 5.5. Implement `seedTenant`, `seedSeat`, `clearState` against the three tables. Use `maybeSingle()` for the tenant + seat lookups; use `{ count: 'exact', head: true }` for the seat count. Errors propagate as thrown promise rejections (no internal try/catch) — they will be caught by the React error boundary at T034.
+- **Description:** Create `site/src/lib/paywall/stores/SupabaseStore.ts` implementing BOTH `EntitlementStore` AND `EntitlementSeed` per architecture § 5.5 + REVISED per ADR-0011. The class accepts a `SupabaseClient` in its constructor. **`getEntitlement(tenantId, userId)` is a SINGLE tenant-row lookup — the `userId` param is accepted but NOT consulted.** Use `.from('tenants').select('*').eq('tenant_id', tenantId).maybeSingle()`. Return:
+  - `{ status: 'tenant_no_subscription' }` if no row OR `tenant.status !== 'active'`
+  - `{ status: 'allowed' }` otherwise
+
+  Implement `seedTenant`, `clearState` against the `tenants` table only (NO `seats` table — per ADR-0011). `seedSeat` is NOT in the PRD-000 `EntitlementSeed` interface; it lands in PRD-002 alongside the seats table. Errors propagate as thrown promise rejections (no internal try/catch) — they will be caught by the React error boundary at T034.
+
+  Match the implementation to PRD § 10's revised pseudocode:
+  ```typescript
+  async getEntitlement(tenantId: string, _userId: string): Promise<EntitlementResult> {
+    // _userId accepted for interface stability; NOT consulted in PRD-000 per ADR-0011.
+    const { data: tenant } = await this.client
+      .from('tenants').select('*').eq('tenant_id', tenantId).maybeSingle();
+    if (!tenant || tenant.status !== 'active') {
+      return { status: 'tenant_no_subscription' };
+    }
+    return { status: 'allowed' };
+  }
+  ```
 
   Also create `site/src/lib/paywall/stores/index.ts` that re-exports `SupabaseStore` AND exposes a module-level singleton factory:
 
@@ -316,14 +362,14 @@ Each epic maps to a tranche from PRD § 12. Tranches are executed strictly seque
 - **Expected Output:** `site/src/lib/paywall/stores/SupabaseStore.ts` + `site/src/lib/paywall/stores/index.ts` exist. `tsc --noEmit` exits 0.
 - **Depends on:** T017, T018, T020a [TDD: failing tests written first]
 
-#### T020a — Write failing `SupabaseStore.getEntitlement` tests (RED — before T019 impl) [TDD]
+#### T020a — Write failing `SupabaseStore.getEntitlement` tests (RED — before T019 impl) [TDD] (REVISED per ADR-0011)
 
-- **Description:** Add `site/src/lib/paywall/stores/SupabaseStore.test.ts` BEFORE implementing `SupabaseStore` (T019). The test file imports the (not-yet-existing) `SupabaseStore` class and defines five test cases:
-  - Tenant not found OR `status !== 'active'` → resolves `{ status: 'tenant_no_subscription' }`.
-  - Tenant active + seat row found → resolves `{ status: 'allowed' }`.
-  - Tenant active + no seat row + `count >= seatsTotal` → resolves `{ status: 'tenant_active_seats_full', seatsTotal }`.
-  - Tenant active + no seat row + `count < seatsTotal` → resolves `{ status: 'tenant_active_user_unassigned' }`.
+- **Description:** Add `site/src/lib/paywall/stores/SupabaseStore.test.ts` BEFORE implementing `SupabaseStore` (T019). The test file imports the (not-yet-existing) `SupabaseStore` class and defines **three** test cases (REVISED — only 3 branches, not 5, per tenant-only evaluator):
+  - Tenant not found (no row) → resolves `{ status: 'tenant_no_subscription' }`.
+  - Tenant found but `status !== 'active'` (e.g., `'cancelled'`) → resolves `{ status: 'tenant_no_subscription' }`.
+  - Tenant found AND `status === 'active'` → resolves `{ status: 'allowed' }`.
   - Supabase client `.from(...).select(...)` rejects → `getEntitlement` rejects (no internal catch).
+  - **REGRESSION GUARD test:** call `getEntitlement('tenant-A', 'user-X')` AND `getEntitlement('tenant-A', 'user-Y')` (different userIds, same tenantId) — both MUST return the SAME result (verifies the `userId` parameter is not consulted, per ADR-0011).
 
   Use a vi.fn-stubbed `SupabaseClient`. Fixture provenance: shapes sourced from `sitecore:marketplace-sdk-client § 9` skill content pre-scaffold; capture-and-fix against `node_modules/@supabase/supabase-js` `.d.ts` at T018. Each fixture must include inline `// source:` comment. Tests MUST fail (module not found) until T019 is implemented.
 
@@ -337,24 +383,25 @@ Each epic maps to a tranche from PRD § 12. Tranches are executed strictly seque
 
 #### T020b — Verify `SupabaseStore` tests pass post-impl (GREEN — after T019) [TDD]
 
-- **Description:** After T019 implements `SupabaseStore`, re-run `npm run test`. All five tests in T020a MUST pass. Coverage of the four-branch decision tree MUST reach ≥ 100%.
-- **Expected Output:** Five tests passing. Coverage ≥ 100% on `SupabaseStore.ts` decision tree.
+- **Description:** After T019 implements `SupabaseStore`, re-run `npm run test`. All tests in T020a MUST pass (3 evaluator branches + reject path + userId-not-consulted regression guard). Coverage of the 2-branch decision tree MUST reach ≥ 100%.
+- **Expected Output:** All T020a tests passing. Coverage ≥ 100% on `SupabaseStore.getEntitlement` decision tree (2 branches: tenant-active vs not-active).
 - **Depends on:** T020a, T019
 
-#### T021 — Implement state-switcher CLI (`scripts/seed-state.ts`)
+#### T021 — Implement state-switcher CLI (`scripts/seed-state.ts`) (REVISED per ADR-0011)
 
-- **Description:** Create `site/scripts/seed-state.ts` per architecture § 3.3 and PRD FR-8. The CLI:
+- **Description:** Create `site/scripts/seed-state.ts` per architecture § 3.3 and PRD FR-8. The CLI supports TWO categories of states (per ADR-0011 tenant-only evaluator):
 
   1. Loads env from `.env.local` (use `dotenv` — install if not present in scaffold).
   2. Reads `SUPABASE_SERVICE_ROLE_KEY` (NOT the anon key) + `NEXT_PUBLIC_SUPABASE_URL` + `OPERATOR_TENANT_ID` + `OPERATOR_USER_ID`.
   3. Accepts argv state argument: `allowed | no-sub | seats-full | unassigned`.
   4. Constructs a SupabaseClient with the service-role key (bypasses RLS).
-  5. Implements idempotently — calls `clearState()` first (truncate `seats` for the operator's tenant + delete-and-reinsert `tenants` row), then applies the target state via `seedTenant` + `seedSeat` calls per the chosen state:
-     - `allowed` → tenant active, seatsTotal 5; seed seat for operator userId.
-     - `no-sub` → tenant cancelled, seatsTotal 5; no seat row.
-     - `seats-full` → tenant active, seatsTotal 1; seed seat for SOMEONE ELSE (use a synthetic `seats-full-placeholder` userId).
-     - `unassigned` → tenant active, seatsTotal 5; no seat row for operator userId.
-  6. Prints success message naming the applied state (e.g. `✓ State applied: seats-full (tenant=<id>, seats_total=1, current_seats=1)`).
+  5. Behavior by state:
+     - **`allowed`** (evaluator-reachable): clear + `seedTenant({ tenantId: OPERATOR_TENANT_ID, plan: 'starter', seatsTotal: 1, status: 'active' })`. Operator refreshes app on real tenant → `<PaywallGate>` resolves to `allowed`.
+     - **`no-sub`** (evaluator-reachable): clear + `seedTenant({ ..., status: 'cancelled' })` OR `clearState()` only (no row). Operator refreshes → gate resolves to `tenant_no_subscription`.
+     - **`seats-full`** (design-reference; not evaluator-reachable): write a sentinel value (e.g. file at `site/.paywall-preview-state`, OR a URL query param `?previewState=seats-full`) that triggers the reference app's "preview-mode" branch to directly render `<SeatsFullState seatsTotal={5} />` without invoking the gate evaluator. Print: `✓ State applied: seats-full (design-reference render; evaluator NOT invoked per ADR-0011)`.
+     - **`unassigned`** (design-reference; not evaluator-reachable): same sentinel mechanism — directly renders `<UserUnassignedState />`. Print: `✓ State applied: unassigned (design-reference render; evaluator NOT invoked per ADR-0011)`.
+  6. The sentinel mechanism choice (filesystem vs URL query param) is the Developer's call — recommendation: URL query param (`?previewState=seats-full | unassigned`) because it requires zero filesystem state and is naturally per-tab. The reference app's `page.tsx` reads `searchParams.previewState` at the top of `<GatedSection>` and short-circuits to the named component, bypassing `<PaywallGate>` entirely when set. This sentinel is dev-only — production builds should warn-log if `previewState` is present.
+  7. Prints success message naming the applied state.
 
   Add `"seed:state": "tsx scripts/seed-state.ts"` script to `site/package.json`. Install `tsx` as devDependency if not present.
 - **Expected Output:** `site/scripts/seed-state.ts` exists. `pnpm seed:state allowed` (or `npm run seed:state -- allowed`) succeeds and prints the success message. Operator can verify rows in Supabase dashboard.
@@ -501,16 +548,16 @@ Each epic maps to a tranche from PRD § 12. Tranches are executed strictly seque
 - **Expected Output:** Component exists. T037a's `NoSubscriptionState.test.tsx` passes.
 - **Depends on:** T037a, T017, T005
 
-#### T029 — Implement `SeatsFullState.tsx` (GREEN for T037a-seats-full) [TDD]
+#### T029 — Implement `SeatsFullState.tsx` (DESIGN-REFERENCE per ADR-0011) (GREEN for T037a-seats-full) [TDD]
 
-- **Description:** Create `site/src/lib/paywall/states/SeatsFullState.tsx` per UI spec § 3.6 + § 8. Props: `{ seatsTotal: number }` (matches `EntitlementResult` `tenant_active_seats_full` variant). `@blok/badge` `"Premium"` eyebrow + Lucide `Users` icon at `text-muted-foreground` + headline `"All seats in use"` + sub-line `"{seatsTotal} of {seatsTotal} seats in use"` (`text-sm font-medium text-foreground`) + body `"Ask your team admin to reassign a seat, or upgrade your plan for more."` + primary CTA `@blok/button variant="default"` labeled `"Upgrade plan"` with `href="https://example.com/upgrade"`, `target="_blank" rel="noopener noreferrer"`, `aria-label="Upgrade plan (opens in new tab)"`, trailing Lucide `ExternalLink` icon. NO secondary CTA (admin reassignment is text-only per UI spec).
-- **Expected Output:** Component exists. T037a's `SeatsFullState.test.tsx` passes. Counter interpolates `seatsTotal` correctly.
+- **Description:** Create `site/src/lib/paywall/states/SeatsFullState.tsx` per UI spec § 3.6 + § 8. **DESIGN-REFERENCE COMPONENT per ADR-0011** — fully built, locked-copy-tested, accessibility-compliant, but NOT reachable from the PRD-000 evaluator. PRD-002 wires it into the extended evaluator. The component is rendered only via the state-switcher CLI's direct-render path (`pnpm seed:state seats-full`). Props: `{ seatsTotal: number }` (matches `EntitlementResult` `tenant_active_seats_full` variant — preserved in the type for PRD-002 forward-compat). `@blok/badge` `"Premium"` eyebrow + Lucide `Users` icon at `text-muted-foreground` + headline `"All seats in use"` + sub-line `"{seatsTotal} of {seatsTotal} seats in use"` (`text-sm font-medium text-foreground`) + body `"Ask your team admin to reassign a seat, or upgrade your plan for more."` + primary CTA `@blok/button variant="default"` labeled `"Upgrade plan"` with `href="https://example.com/upgrade"`, `target="_blank" rel="noopener noreferrer"`, `aria-label="Upgrade plan (opens in new tab)"`, trailing Lucide `ExternalLink` icon. NO secondary CTA (admin reassignment is text-only per UI spec).
+- **Expected Output:** Component exists. T037a's `SeatsFullState.test.tsx` passes. Counter interpolates `seatsTotal` correctly. Component is NOT imported by `PaywallGate.tsx`'s evaluator switch (PRD-000) — it is imported by the state-switcher CLI's direct-render path only.
 - **Depends on:** T037a, T017, T005
 
-#### T030 — Implement `UserUnassignedState.tsx`
+#### T030 — Implement `UserUnassignedState.tsx` (DESIGN-REFERENCE per ADR-0011)
 
-- **Description:** Create `site/src/lib/paywall/states/UserUnassignedState.tsx` per UI spec § 3.7. `@blok/badge` `"Premium"` eyebrow + Lucide `UserPlus` icon at `text-muted-foreground` + headline `"Ask your team admin"` + body `"Your tenant has a plan, but your team admin hasn't given you a seat yet."` NO CTA in PRD-000 (deliberate per PRD US-3 — no disabled buttons).
-- **Expected Output:** Component exists. T037a's `UserUnassignedState.test.tsx` passes.
+- **Description:** Create `site/src/lib/paywall/states/UserUnassignedState.tsx` per UI spec § 3.7. **DESIGN-REFERENCE COMPONENT per ADR-0011** — fully built, locked-copy-tested, accessibility-compliant, but NOT reachable from the PRD-000 evaluator. PRD-002 wires it into the extended evaluator. The component is rendered only via the state-switcher CLI's direct-render path (`pnpm seed:state unassigned`). `@blok/badge` `"Premium"` eyebrow + Lucide `UserPlus` icon at `text-muted-foreground` + headline `"Ask your team admin"` + body `"Your tenant has a plan, but your team admin hasn't given you a seat yet."` NO CTA in PRD-000 (deliberate per PRD US-3 — no disabled buttons).
+- **Expected Output:** Component exists. T037a's `UserUnassignedState.test.tsx` passes. Component is NOT imported by `PaywallGate.tsx`'s evaluator switch (PRD-000) — it is imported by the state-switcher CLI's direct-render path only.
 - **Depends on:** T037a, T017, T005
 
 #### T031 — Refactor existing welcome into `AllowedState.tsx` (GREEN for T037a-allowed) [TDD]
@@ -985,7 +1032,7 @@ Each epic maps to a tranche from PRD § 12. Tranches are executed strictly seque
 
 The following constraints are absolute. Violating any is a Developer failure; the Developer escalates rather than work around.
 
-1. **All 10 ADRs (0001–0010) are non-negotiable.** See § 4c-2 for one-liners.
+1. **All 11 ADRs (0001–0011) are non-negotiable.** See § 4c-2 for one-liners. ADR-0011 (tenant-only entitlement) is the latest binding constraint; supersedes any prior reading of the 4-variant `EntitlementResult` as a 4-state evaluator.
 2. **Locked copy strings.** Every string in UI spec § 8 (`"Inventory at a glance"`, `"Welcome, {firstName}"`, `"Start your subscription"`, `"View plans"`, `"All seats in use"`, `"{seatsTotal} of {seatsTotal} seats in use"`, `"Upgrade plan"`, `"Ask your team admin"`, `"Paywall disabled — demo mode"`, `"Something went wrong"`, etc.) must be used verbatim. Body text is locked. CTA labels are locked. No substitutions, paraphrases, or "I think this reads better" rewrites. Copy was warmth-/quality-bar-checked at the PRD + UI stage.
 3. **Compile-time dev-override guard.** The dev-override branch MUST be wrapped in `process.env.NODE_ENV !== 'production' && process.env.PAYWALL_DEV_OVERRIDE_USER_ID && ...` so Webpack tree-shakes it from production. Runtime-only guards are insufficient. Verified by T045 post-build grep.
 4. **Blok semantic tokens only — no invented hex.** Color: `bg-background`, `bg-card`, `bg-primary`, `bg-muted`, `bg-secondary`, `text-foreground`, `text-muted-foreground`, `text-primary-foreground`, `border-border`, `ring-ring`. Spacing: Tailwind v4 default `--spacing-*` scale (px-6, mt-4, mt-6, pt-6, gap-3, etc.). If a need arises for a color or radius not represented in Blok tokens, STOP and escalate — never guess.
@@ -997,17 +1044,18 @@ The following constraints are absolute. Violating any is a Developer failure; th
 10. **Top-level React error boundary positioning.** NFR-6 + architecture § 8.5. The `<ErrorBoundary>` wraps ONLY the `<GatedSection>` — `<FreeSection />` MUST render outside its scope. When the gate throws, free section keeps rendering.
 11. **Single generic skeleton sized to seats-full.** ADR-0007. ONE `SkeletonState.tsx` sized to the largest resolved state (`tenant_active_seats_full`). NOT four per-state skeletons.
 12. **Context-readiness via provider hook + defensive null guard.** ADR-0008. Gate consumes `useAppContext()` from the scaffold's `MarketplaceProvider`. If the hook returns `null` or `undefined`, render skeleton (defensive belt-and-suspenders). Do NOT poll `application.context` directly from the gate.
-13. **Supabase RLS enabled with permissive defaults.** ADR-0009. `supabase/schema.sql` enables RLS on all three tables + ships `USING (true)` placeholder policies on `tenants` and `seats` + NO anon policy on `purchase_events`. README flags adopters MUST harden.
+13. **Supabase RLS enabled with permissive defaults.** ADR-0009. `supabase/schema.sql` enables RLS on the **2 PRD-000 tables** (`tenants`, `processed_events`) + ships `USING (true)` placeholder policy on `tenants` + NO anon policy on `processed_events` (service-role only). README flags adopters MUST harden. The `seats` table is NOT in PRD-000 (per ADR-0011).
 14. **Custom app registration only; no public-Marketplace submission.** ADR-0006. App type = Custom. Submission deferred post-PRD-003.
 15. **4a client-side iframe scaffold only; no Next.js API routes.** ADR-0005. No `app/api/*` routes in PRD-000. Webhooks deferred to PRD-001 out-of-band.
 16. **No `as never` / `as any` casts in SDK call sites.** Rule `40-sdk-contracts.mdc`. SDK shapes come from `node_modules/@sitecore-marketplace-sdk/client/dist/*.d.ts` (verified at T014 + cited inline at T023 / T031).
 17. **All SDK call shapes cite their `.d.ts` path inline as a code comment.** Rule `40-sdk-contracts.mdc`. See § 4c-6.
+18. **Tenant-only entitlement evaluator (ADR-0011).** `SupabaseStore.getEntitlement(tenantId, userId)` consults `tenants` ONLY. Returns `allowed` if `tenant.status === 'active'`; `tenant_no_subscription` otherwise. The `userId` parameter is accepted by the function signature for interface stability across PRDs but is NOT consulted in PRD-000. The `seats` table is NOT in PRD-000 schema. The 4-variant `EntitlementResult` type retains all 4 variants for forward-compat with PRD-002 — but PRD-000 evaluator NEVER returns the seat-related variants. Developer MUST NOT add seat-counting logic to PRD-000.
 
 ### 4c-2. ADR one-liners
 
 - **ADR-0001:** Use ADRs as the architecture backbone — every significant decision is recorded under `project-planning/ADR/`.
 - **ADR-0002:** Split entitlement-store contract into `EntitlementStore` (runtime — `getEntitlement`) + `EntitlementSeed` (dev — `seedTenant` / `seedSeat` / `clearState`). `SupabaseStore` implements both. `EntitlementResult` is a strict 4-variant discriminated union; no error variant.
-- **ADR-0003:** `PaymentProvider` interface declared in `types.ts` as a type-only placeholder in PRD-000. No implementation. Comment block flags PRD-001 as the first implementation. Adopters can implement against it immediately for forward-compat.
+- **ADR-0003 (revised 2026-05-13):** `PaymentProvider` interface declared in `types.ts` as a type-only placeholder in PRD-000. No implementation. Comment block flags **Stripe direct** (Stripe Billing + Entitlements API + Customer Portal) as the v1 adapter landing in PRD-001. Lemon-Squeezy / Polar.sh / Paddle are post-PRD-003 swap candidates. Adopters can implement against the interface immediately for forward-compat.
 - **ADR-0004:** Env-flag uses signaled pass-through — when `NEXT_PUBLIC_PAYWALL_ENABLED=false`, gate renders children + persistent non-dismissible banner with locked copy `"Paywall disabled — demo mode"`. Silent pass-through rejected.
 - **ADR-0005:** Scaffold is 4a client-side iframe via `sitecore:setup-marketplace-client-side`. No server-side API routes in PRD-000. Webhook hosting for PRD-001 is out-of-band.
 - **ADR-0006:** Register as custom app in PRD-000. Public-Marketplace submission deferred post-PRD-003. Codebase is architected as public-app-ready (Blok + WCAG AA) from day one.
@@ -1015,6 +1063,7 @@ The following constraints are absolute. Violating any is a Developer failure; th
 - **ADR-0008:** Context-readiness signal sourced from `MarketplaceProvider` resolution (the provider renders children only after `ClientSDK.init()` AND `client.query('application.context')` resolve). Gate consumes via `useAppContext()` hook. Defensive `null` guard renders skeleton as belt-and-suspenders.
 - **ADR-0009:** Supabase RLS enabled with permissive `USING (true)` placeholder policies on `tenants` + `seats`; `purchase_events` has no anon policy (service-role only). README + schema.sql comment explicitly flag "REPLACE BEFORE PRODUCTION."
 - **ADR-0010:** Supabase setup uses a copy-pasteable SQL block at `site/supabase/schema.sql` for the README quickstart. No `supabase init` automation, no `pnpm setup:supabase` wizard. Idempotent re-runs via `CREATE TABLE IF NOT EXISTS` + `DROP POLICY IF EXISTS`.
+- **ADR-0011 (new 2026-05-13):** Tenant-only entitlement in PRD-000. `getEntitlement(tenantId, userId)` consults `tenants` only; ignores `userId`. Returns 2-variant: `allowed | tenant_no_subscription`. The `seats` table is removed from PRD-000 schema (PRD-002 adds it). All 4 UX state components ship in PRD-000 — `SeatsFullState` + `UserUnassignedState` as **design-reference** components reachable only via direct render. Evaluator NEVER returns the seat-related variants.
 
 ### 4c-3. Stack / tooling specifics
 

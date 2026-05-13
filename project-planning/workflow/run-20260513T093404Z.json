@@ -2,7 +2,7 @@
   "schema_version": 6,
   "run_id": "20260513T093404Z",
   "created_at": "2026-05-13T09:34:04Z",
-  "updated_at": "2026-05-13T17:30:00Z",
+  "updated_at": "2026-05-13T18:30:00Z",
   "product_slug": "paywall-blueprint",
   "product_root": "products/paywall-blueprint",
   "status": "qa_ready",
@@ -62,7 +62,8 @@
       "products/paywall-blueprint/project-planning/ADR/adr-0007-single-generic-skeleton.md",
       "products/paywall-blueprint/project-planning/ADR/adr-0008-context-readiness-via-provider-resolution.md",
       "products/paywall-blueprint/project-planning/ADR/adr-0009-supabase-rls-permissive-default.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0010-supabase-setup-via-sql-block.md"
+      "products/paywall-blueprint/project-planning/ADR/adr-0010-supabase-setup-via-sql-block.md",
+      "products/paywall-blueprint/project-planning/ADR/adr-0011-tenant-only-entitlement-prd000.md"
     ]
   },
   "architecture": {
@@ -253,6 +254,24 @@
       "raised_at": "2026-05-13T17:30:00Z",
       "resolved_at": null,
       "references": "stage_history qa_ready entry includes the explanation"
+    },
+    {
+      "stage": "task-breakdown",
+      "severity": "info",
+      "kind": "resolved",
+      "item": "RESOLVED: PRD revision 2026-05-13 split per-user seat enforcement out of PRD-000 (ADR-0011 created); evaluator is tenant-only. 4 UX state components ship; only 2 are evaluator-reachable; the other 2 are design-reference accessible via state-switcher CLI direct-render. Schema reduced from 3 tables to 2 (seats removed). Updated: PRD-000 \u00a7\u00a7 1/5/6/7/9/10/12, ADR-0011 created, ADR README updated, prd-minimal-000 non-negotiables list, task breakdown \u00a7 4 revision notice + T016 + T017 + T019 + T020a/b + T021 + T029 + T030 + \u00a7 4c-1 + \u00a7 4c-2.",
+      "raised_at": "2026-05-13T18:30:00Z",
+      "resolved_at": "2026-05-13T18:30:00Z",
+      "references": "ADR-0011 + Revision A in task breakdown \u00a7 4"
+    },
+    {
+      "stage": "task-breakdown",
+      "severity": "info",
+      "kind": "resolved",
+      "item": "RESOLVED: Provider revised from Lemon Squeezy to Stripe direct (Stripe Billing + Entitlements API + Customer Portal) after operator research at storage/paywall-providers-research-2026-05-13.md. ADR-0003 rewritten; PRD \u00a7\u00a7 1/9/13/14 updated; Lemon-Squeezy-company-future concern (OQ-PRD001-5) dropped (no longer relevant); OA-2 reframed from legal-review-of-MoR-provider to optional Stripe-Tax decision; new OQ-PRD001-5 captures iframe-postMessage probe from research \u00a7 8.7. Trial mode (OQ-PRD001-3) resolved via Stripe's native trial_period_days. PRD-003 scope shrinks dramatically (Stripe Customer Portal = one API call).",
+      "raised_at": "2026-05-13T18:30:00Z",
+      "resolved_at": "2026-05-13T18:30:00Z",
+      "references": "ADR-0003 + storage/paywall-providers-research-2026-05-13.md \u00a7 8"
     }
   ],
   "notes": [

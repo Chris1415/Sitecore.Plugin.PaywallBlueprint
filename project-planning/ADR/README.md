@@ -16,7 +16,8 @@ This directory holds ADRs for this product workspace.
 | ADR-0008 | Context-readiness signal sourced from `MarketplaceProvider` resolution, not from a dedicated SDK ready-event | Accepted |
 | ADR-0009 | Supabase RLS enabled with permissive default policies in PRD-000; production adopters harden | Accepted |
 | ADR-0010 | Supabase setup via copy-pasteable SQL block in `supabase/schema.sql`, not CLI automation | Accepted |
+| ADR-0011 | Tenant-only entitlement in PRD-000; per-user seat enforcement deferred to PRD-002 | Accepted |
 
 ## Next number
 
-Use the next free four-digit id after the highest existing `adr-*.md`. Next: `0011`.
+Use the next free four-digit id after the highest existing `adr-*.md`. Next: `0012`.
