@@ -154,8 +154,7 @@
     "target_directory": "site",
     "branch_name": "prd-000",
     "remote_url": "https://github.com/Chris1415/Sitecore.Plugin.PaywallBlueprint.git",
-    "status": "tranche_a_awaiting_operator_gate",
-    "current_tranche": "A",
+    "status": "tranche_a_complete_starting_b",
     "resumed_from_stage": null,
     "tranche_a_progress": {
       "T001": "completed",
@@ -164,17 +163,28 @@
       "T004": "completed",
       "T005": "completed",
       "T006": "completed",
-      "T007": "pending_operator",
+      "T007": "completed (operator registered with /full-page route 2026-05-13T20:55Z; manifest extension_points.route corrected)",
       "T008": "completed",
       "T009": "completed",
       "T010a": "completed",
       "T010b": "completed",
       "T011": "completed",
-      "T012": "pending_operator",
-      "notes": "T008-T011 completed 2026-05-13. T011 gate: lint 0 errors (3 pre-existing upstream warnings), tsc exit 0, test 8/8 pass, build exit 0. Stopped at T012 (operator action required — real-tenant iframe install)."
+      "T012": "passed 2026-05-13T21:00Z (operator: 'all looks good go ahead')",
+      "notes": "Tranche A complete. T011 gate: lint 0 errors (3 pre-existing upstream warnings), tsc exit 0, test 8/8 pass, build exit 0. T012 passed after /full-page route was added + manifest updated. Ready for Tranche B."
+    },
+    "current_tranche": "B"
+  },
+  "smoke_outcomes": {
+    "T012_tranche_a_iframe_install": {
+      "required_by": "PRD-000 § 12 Tranche A operator gate",
+      "description": "Install custom app on real Sitecore tenant; verify iframe renders at SitecoreAI Full Screen extension point; Blok chrome correct; free + premium sections both visible at \u2265 1024\u00d7768 without scroll.",
+      "outcome": "passed",
+      "recorded_at": "2026-05-13T21:00:00Z",
+      "evidence": "Operator confirmed 'all looks good go ahead' after route correction (/full-page added + manifest updated). Cloud Portal iframe loaded the shell over ngrok tunnel to localhost:3000.",
+      "notes": "Operator registered Cloud Portal app with canonical /full-page route; required adding site/app/full-page/page.tsx as re-export of root shell.",
+      "category": "live_walkthrough"
     }
   },
-  "smoke_outcomes": {},
   "operator_attention": [
     {
       "stage": "discovery",
