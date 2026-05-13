@@ -70,7 +70,7 @@ function ProbeCard({
               <Badge colorScheme="success">OK — {state.durationMs}ms</Badge>
             )}
             {state.status === "error" && (
-              <Badge colorScheme="error">Error</Badge>
+              <Badge colorScheme="danger">Error</Badge>
             )}
             {state.status === "running" && (
               <Badge colorScheme="primary">Running…</Badge>

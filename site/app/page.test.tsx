@@ -1,6 +1,15 @@
 /**
- * T010a — RED test (TDD): failing layout assertions for the Tranche A page shell.
- * Tests MUST fail until T009 replaces app/page.tsx with the freemium layout.
+ * T010a — layout assertions for the Tranche A page shell (updated for T023).
+ *
+ * T023 update: GatedSection now uses useHostUser() (host.user) and useAppContext()
+ * (application.context) for the defensive layered render. The mock is extended to
+ * supply both hooks with values that produce the expected text output.
+ *
+ * Mock shape rationale:
+ *   - useHostUser returns { given_name: 'Christian' } → pickUserDisplay → "Christian"
+ *   - useAppContext returns resourceAccess with tenantDisplayName → "Hahn Solo Demo"
+ *   These are the same displayed strings as Tranche A — the assertions don't change,
+ *   only the data source changes (context → hooks).
  *
  * Locked copy source: pocs/poc-v1-prd000/state-allowed.html (visual source of truth)
  * and UI spec § 8 locked strings per caller brief.
@@ -11,22 +20,36 @@ import { describe, it, expect, vi } from "vitest";
 import Page from "./page";
 
 // ---------------------------------------------------------------------------
-// MarketplaceProvider mock
-// The scaffold wraps all routes in MarketplaceProvider. Providing a minimal
-// mock prevents the "connecting to Marketplace..." loader from blocking renders.
+// MarketplaceProvider mock (T010a + T023 update)
+// Provides all three hooks: useMarketplaceClient, useAppContext, useHostUser.
+// useHostUser: given_name='Christian' → pickUserDisplay → "Christian"
+// useAppContext: resourceAccess[0].tenantDisplayName='Hahn Solo Demo' → pickTenantDisplay
 // ---------------------------------------------------------------------------
 vi.mock("@/components/providers/marketplace", () => ({
   MarketplaceProvider: ({ children }: { children: React.ReactNode }) => (
     <>{children}</>
   ),
   useAppContext: () => ({
-    user: { id: "u1", name: "Christian Hahn", email: "christian@hahn-solo.net" },
-    tenant: { id: "tenant-001", name: "Hahn Solo Demo" },
+    // application.context shape per sdk-fixtures/application-context.json
+    marketplaceAppTenantId: "test-tenant-id-00000001",
+    resourceAccess: [
+      {
+        tenantDisplayName: "Hahn Solo Demo",
+        tenantName: null,
+      },
+    ],
+  }),
+  useHostUser: () => ({
+    // host.user shape per sdk-fixtures/host-user.json
+    given_name: "Christian",
+    name: "Christian Hahn",
+    email: "christian@hahn-solo.net",
+    sub: "auth0|test-user-001",
   }),
   useMarketplaceClient: () => ({}),
 }));
 
-describe("Page — Tranche A layout shell (T010a RED)", () => {
+describe("Page — Tranche A layout shell (T010a)", () => {
   it("renders the topbar with label 'Paywall Blueprint'", () => {
     render(<Page />);
     expect(screen.getByText("Paywall Blueprint")).toBeTruthy();
@@ -57,12 +80,13 @@ describe("Page — Tranche A layout shell (T010a RED)", () => {
 
   it("renders the gated section heading 'Welcome, Christian'", () => {
     render(<Page />);
-    // Hardcoded in Tranche A — no useAppContext() call yet (Tranche B wires context)
+    // T023: now sourced from useHostUser().given_name → pickUserDisplay → "Christian"
     expect(screen.getByText("Welcome, Christian")).toBeTruthy();
   });
 
-  it("renders the gated section body with locked copy", () => {
+  it("renders the gated section body with tenant display name", () => {
     render(<Page />);
+    // T023: tenantDisplay sourced from useAppContext().resourceAccess[0].tenantDisplayName
     expect(
       screen.getByText(
         "Your tenant Hahn Solo Demo has full access. Replace this card with your gated feature."
