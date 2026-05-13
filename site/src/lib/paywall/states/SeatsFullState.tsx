@@ -23,7 +23,8 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, ExternalLink } from "lucide-react";
+import { Users } from "lucide-react";
+import { PaywallCheckoutDialog } from "@/src/lib/paywall/PaywallCheckoutDialog";
 
 interface SeatsFullStateProps {
   seatsTotal: number;
@@ -60,23 +61,14 @@ export function SeatsFullState({ seatsTotal }: SeatsFullStateProps) {
           Ask your team admin to reassign a seat, or upgrade your plan for more.
         </p>
 
-        {/* Primary CTA only — NO secondary CTA per UI spec § 3.6 (admin reassignment is text-only) */}
+        {/* Primary CTA opens PaywallCheckoutDialog — placeholder for PRD-001 Stripe Checkout (operator decision 2026-05-13). */}
+        {/* CTA label "Upgrade plan" stays locked per UI spec § 8. NO secondary CTA (admin reassignment is text-only). */}
         <div className="mt-3">
-          <Button variant="default" asChild>
-            <a
-              href="https://example.com/upgrade"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Upgrade plan (opens in new tab)"
-            >
+          <PaywallCheckoutDialog>
+            <Button variant="default" aria-label="Upgrade plan">
               Upgrade plan
-              <ExternalLink
-                size={14}
-                aria-hidden="true"
-                className="ml-1.5"
-              />
-            </a>
-          </Button>
+            </Button>
+          </PaywallCheckoutDialog>
         </div>
       </div>
     </div>

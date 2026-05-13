@@ -15,7 +15,8 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CircleAlert, ExternalLink } from "lucide-react";
+import { CircleAlert } from "lucide-react";
+import { PaywallCheckoutDialog } from "@/src/lib/paywall/PaywallCheckoutDialog";
 
 export function NoSubscriptionState() {
   return (
@@ -44,23 +45,14 @@ export function NoSubscriptionState() {
           unlock the premium section.
         </p>
 
-        {/* Primary CTA — locked copy + a11y per UI spec § 3.5 */}
+        {/* Primary CTA opens PaywallCheckoutDialog — placeholder for PRD-001 Stripe Checkout (operator decision 2026-05-13). */}
+        {/* CTA label "View plans" stays locked per UI spec § 8. */}
         <div className="mt-3">
-          <Button variant="default" asChild>
-            <a
-              href="https://example.com/buy"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="View plans (opens in new tab)"
-            >
+          <PaywallCheckoutDialog>
+            <Button variant="default" aria-label="View plans">
               View plans
-              <ExternalLink
-                size={14}
-                aria-hidden="true"
-                className="ml-1.5"
-              />
-            </a>
-          </Button>
+            </Button>
+          </PaywallCheckoutDialog>
         </div>
       </div>
     </div>

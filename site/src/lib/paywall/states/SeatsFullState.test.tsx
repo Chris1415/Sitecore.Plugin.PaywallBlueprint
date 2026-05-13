@@ -1,16 +1,19 @@
 /**
- * T037a RED — SeatsFullState locked copy + counter + link attributes.
- * Locked strings per UI spec § 3.6 + § 8. Verified against POC:
- *   pocs/poc-v1-prd000/state-seats-full.html
- * DESIGN-REFERENCE component per ADR-0011 — not reachable from evaluator.
- * Fails until T029 implements SeatsFullState.tsx.
+ * SeatsFullState — locked copy + counter + PaywallCheckoutDialog trigger behavior.
+ * Locked strings per UI spec § 3.6 + § 8.
+ * DESIGN-REFERENCE component per ADR-0011 — not reachable from PRD-000 evaluator.
+ *
+ * 2026-05-13 revision: CTA changed from external-link `<a href="https://example.com/upgrade">`
+ * to a `<button>` that opens PaywallCheckoutDialog (operator decision — placeholder for
+ * PRD-001 Stripe Checkout). CTA label "Upgrade plan" stays locked.
  */
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect } from "vitest";
 import { SeatsFullState } from "./SeatsFullState";
 
-describe("SeatsFullState — locked copy + counter + a11y (T037a)", () => {
+describe("SeatsFullState — locked copy + counter + a11y (revised 2026-05-13)", () => {
   it('renders headline "All seats in use" (verbatim)', () => {
     render(<SeatsFullState seatsTotal={5} />);
     expect(screen.getByText("All seats in use")).toBeTruthy();
@@ -25,47 +28,46 @@ describe("SeatsFullState — locked copy + counter + a11y (T037a)", () => {
     render(<SeatsFullState seatsTotal={5} />);
     expect(
       screen.getByText(
-        "Ask your team admin to reassign a seat, or upgrade your plan for more."
-      )
+        "Ask your team admin to reassign a seat, or upgrade your plan for more.",
+      ),
     ).toBeTruthy();
   });
 
-  it('renders CTA link "Upgrade plan"', () => {
+  it('renders CTA button "Upgrade plan" (NOT a link)', () => {
     render(<SeatsFullState seatsTotal={5} />);
-    expect(screen.getByRole("link", { name: /Upgrade plan/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Upgrade plan/i })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: /Upgrade plan/i })).toBeNull();
   });
 
-  it('CTA link has href="https://example.com/upgrade"', () => {
+  it('CTA button has aria-label="Upgrade plan"', () => {
     render(<SeatsFullState seatsTotal={5} />);
-    const link = screen.getByRole("link", { name: /Upgrade plan/i });
-    expect(link.getAttribute("href")).toBe("https://example.com/upgrade");
+    const button = screen.getByRole("button", { name: "Upgrade plan" });
+    expect(button.getAttribute("aria-label")).toBe("Upgrade plan");
   });
 
-  it('CTA link has target="_blank"', () => {
+  it("NO secondary CTA for admin-reassignment (text-only mention per PRD-000)", () => {
     render(<SeatsFullState seatsTotal={5} />);
-    const link = screen.getByRole("link", { name: /Upgrade plan/i });
-    expect(link.getAttribute("target")).toBe("_blank");
+    // There must be exactly ONE button — the upgrade CTA. No reassign button.
+    const buttons = screen.getAllByRole("button");
+    expect(buttons).toHaveLength(1);
   });
 
-  it('CTA link has rel="noopener noreferrer"', () => {
+  it("clicking CTA opens the PaywallCheckoutDialog with the locked placeholder copy", async () => {
+    const user = userEvent.setup();
     render(<SeatsFullState seatsTotal={5} />);
-    const link = screen.getByRole("link", { name: /Upgrade plan/i });
-    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
-  });
 
-  it('CTA link has aria-label="Upgrade plan (opens in new tab)"', () => {
-    render(<SeatsFullState seatsTotal={5} />);
-    const link = screen.getByRole("link", {
-      name: "Upgrade plan (opens in new tab)",
-    });
-    expect(link).toBeTruthy();
-  });
+    expect(screen.queryByRole("dialog")).toBeNull();
 
-  it("NO secondary CTA link for admin-reassignment (text-only mention per PRD-000)", () => {
-    render(<SeatsFullState seatsTotal={5} />);
-    // There must be exactly ONE link — the upgrade CTA. No reassign link.
-    const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(1);
+    const trigger = screen.getByRole("button", { name: /Upgrade plan/i });
+    await user.click(trigger);
+
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+    expect(screen.getByText("Unlock — €0.99 lifetime")).toBeTruthy();
+    expect(
+      screen.getByText(
+        /Unlimited seats. Lifetime access to the premium section. One-time €0.99 payment\./,
+      ),
+    ).toBeTruthy();
   });
 
   it("counter interpolates seatsTotal correctly for seatsTotal={3}", () => {

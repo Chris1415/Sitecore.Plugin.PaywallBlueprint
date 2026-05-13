@@ -17,7 +17,6 @@
 
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { AllowedState } from "@/src/lib/paywall/states/AllowedState";
 import { PaywallGate } from "@/src/lib/paywall/PaywallGate";
@@ -29,8 +28,12 @@ import { PaywallGate } from "@/src/lib/paywall/PaywallGate";
 export { pickUserDisplay, pickTenantDisplay } from "@/src/lib/paywall/states/AllowedState";
 
 // ---------------------------------------------------------------------------
-// GatedSection — wraps PaywallGate which resolves to the correct state component
+// GatedSection — wraps PaywallGate which resolves to the correct state component.
+//
 // T035: PaywallGate wraps AllowedState as "allowed" children.
+// The "Premium" badge lives inside each state component (AllowedState,
+// NoSubscriptionState, SeatsFullState, UserUnassignedState) — NOT in this wrapper.
+// Duplicated-badge regression (2026-05-13) fixed by removing the wrapper-level Badge.
 // ---------------------------------------------------------------------------
 export function GatedSection() {
   return (
@@ -40,11 +43,6 @@ export function GatedSection() {
       className="w-full"
     >
       <Card style="outline" elevation="sm" padding="lg">
-        {/* Premium eyebrow badge — colorScheme="primary" for gated/paid tier */}
-        <Badge colorScheme="primary" size="md">
-          Premium
-        </Badge>
-
         {/* PaywallGate — resolves entitlement and renders the matching state component */}
         {/* T035: AllowedState is the "allowed" children; gate routes other states directly */}
         <PaywallGate>

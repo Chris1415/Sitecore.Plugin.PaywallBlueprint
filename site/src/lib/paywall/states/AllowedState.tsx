@@ -30,6 +30,7 @@
 "use client";
 
 import { CircleCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useAppContext, useHostUser } from "@/components/providers/marketplace";
 
 // ---------------------------------------------------------------------------
@@ -86,6 +87,12 @@ export function AllowedState() {
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Premium eyebrow — consistent with all 4 state components per POC state-allowed.html */}
+      {/* Regression fix 2026-05-13: AllowedState was missing the badge; restored per POC source. */}
+      <Badge colorScheme="primary" size="md">
+        Premium
+      </Badge>
+
       <div className="flex flex-col gap-3">
         {/* Positive state icon — text-primary per UI spec § 3.4 */}
         <CircleCheck
