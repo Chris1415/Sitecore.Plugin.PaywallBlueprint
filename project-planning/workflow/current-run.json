@@ -172,7 +172,26 @@
       "T012": "passed 2026-05-13T21:00Z (operator: 'all looks good go ahead')",
       "notes": "Tranche A complete. T011 gate: lint 0 errors (3 pre-existing upstream warnings), tsc exit 0, test 8/8 pass, build exit 0. T012 passed after /full-page route was added + manifest updated. Ready for Tranche B."
     },
-    "current_tranche": "B"
+    "current_tranche": "C",
+    "tranche_b_progress": {
+      "T013": "completed (probe captured 2026-05-13T21:30Z; fixtures at sdk-fixtures/)",
+      "T014": "completed (.d.ts verification report)",
+      "T015": "completed (Supabase project + .env.local)",
+      "T016": "completed (2-table schema per ADR-0011)",
+      "T017": "completed (types.ts — 4-variant union with PRD-000 vs fwd-compat comments)",
+      "T018": "completed (@supabase/supabase-js 2.105.4)",
+      "T019": "completed (tenant-only evaluator)",
+      "T020a": "completed (5 RED tests including userId-not-consulted regression guard)",
+      "T020b": "completed (5 GREEN)",
+      "T021": "completed (seed:state CLI accepts --tenant arg; design-ref states print no-op message)",
+      "T022": "completed (4 integration tests with skipIf when env unset)",
+      "T023": "completed (MarketplaceProvider expanded with HostUserContext + useHostUser; GatedSection defensive layered render)",
+      "T024a": "completed (8 RED tests covering both fallback chains)",
+      "T024b": "completed (8 GREEN; T010a updated to mock useHostUser)",
+      "T025": "completed (lint 0/tsc 0/test 25/25/build 0)",
+      "T026": "passed 2026-05-13T22:00Z (real-tenant welcome renders operator's identity dynamically)",
+      "notes": "Probe UI at /debug + 'Development helpers' footer link removed after T013 completed (operator request; 245 LOC deleted). Build output now: /, /_not-found, /full-page only."
+    }
   },
   "smoke_outcomes": {
     "T012_tranche_a_iframe_install": {
@@ -182,6 +201,15 @@
       "recorded_at": "2026-05-13T21:00:00Z",
       "evidence": "Operator confirmed 'all looks good go ahead' after route correction (/full-page added + manifest updated). Cloud Portal iframe loaded the shell over ngrok tunnel to localhost:3000.",
       "notes": "Operator registered Cloud Portal app with canonical /full-page route; required adding site/app/full-page/page.tsx as re-export of root shell.",
+      "category": "live_walkthrough"
+    },
+    "T026_tranche_b_welcome_actual_identity": {
+      "required_by": "PRD-000 \u00a7 12 Tranche B operator gate",
+      "description": "Seed allowed entitlement via pnpm seed:state allowed --tenant <id>; refresh real-tenant iframe; confirm welcome screen renders operator's actual given_name from host.user.given_name AND tenantDisplayName from application.context.resourceAccess[0].tenantDisplayName.",
+      "outcome": "passed",
+      "recorded_at": "2026-05-13T22:00:00Z",
+      "evidence": "Operator confirmed 'all good then'. Probe UI removed afterwards per operator request (245 lines deleted; build still passes; 25/25 tests). Note: Tranche B renders GatedSection unconditionally \u2014 Supabase state has no effect yet; that's by design and was clarified to operator. <PaywallGate> evaluation lands in Tranche C (T033/T035).",
+      "notes": "Tranche B explicitly does NOT engage the paywall evaluator. Confirmed expected behavior; operator understood Supabase row prep was preparation for Tranche C, not a gate effect.",
       "category": "live_walkthrough"
     }
   },
