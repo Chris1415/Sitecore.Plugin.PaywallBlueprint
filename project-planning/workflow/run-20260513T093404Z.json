@@ -172,7 +172,7 @@
       "T012": "passed 2026-05-13T21:00Z (operator: 'all looks good go ahead')",
       "notes": "Tranche A complete. T011 gate: lint 0 errors (3 pre-existing upstream warnings), tsc exit 0, test 8/8 pass, build exit 0. T012 passed after /full-page route was added + manifest updated. Ready for Tranche B."
     },
-    "current_tranche": "C",
+    "current_tranche": "D",
     "tranche_b_progress": {
       "T013": "completed (probe captured 2026-05-13T21:30Z; fixtures at sdk-fixtures/)",
       "T014": "completed (.d.ts verification report)",
@@ -201,6 +201,15 @@
       "recorded_at": "2026-05-13T21:00:00Z",
       "evidence": "Operator confirmed 'all looks good go ahead' after route correction (/full-page added + manifest updated). Cloud Portal iframe loaded the shell over ngrok tunnel to localhost:3000.",
       "notes": "Operator registered Cloud Portal app with canonical /full-page route; required adding site/app/full-page/page.tsx as re-export of root shell.",
+      "category": "live_walkthrough"
+    },
+    "T039_tranche_c_challenge_gate": {
+      "required_by": "PRD-000 \u00a7 12 Tranche C CHALLENGE GATE (scored rubric)",
+      "description": "Walk all 4 UX states (allowed + no-sub via gate evaluator; seats-full + unassigned via dev picker / URL param); trigger error boundary; verify free section keeps rendering when gate throws; verify locked copy + dialog placeholder + no duplicate badge.",
+      "outcome": "passed",
+      "recorded_at": "2026-05-14T08:30:00Z",
+      "evidence": "Operator confirmed 'works all great' after two iterations: (1) initial walkthrough caught duplicate Premium badge + external-link CTA expectations; (2) revised with PaywallCheckoutDialog (\u20ac0.99 placeholder) + GatedSectionWithDevPicker (in-page state toggle without URL changes) + server/client boundary fix for isValidPreviewState. 71/71 tests, lint 0, build 0.",
+      "notes": "Tranche C deviations from original PRD plan (operator-driven): (a) external-link CTAs in NoSubscriptionState and SeatsFullState replaced with PaywallCheckoutDialog placeholder; will be replaced by real Stripe Checkout in PRD-001 per research \u00a7 8.2. (b) AllowedState was missing its Premium badge in T031 — restored. (c) added dev-mode state picker (tree-shaken in production).",
       "category": "live_walkthrough"
     },
     "T026_tranche_b_welcome_actual_identity": {
