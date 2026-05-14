@@ -19,11 +19,11 @@
 import Topbar from "@/components/bloks/top-bar";
 import { Separator } from "@/components/ui/separator";
 import { FreeSection } from "@/components/free-section";
+import { GatedSectionWithDevPicker } from "@/components/gated-section-with-dev-picker";
 import {
-  GatedSectionWithDevPicker,
   isValidPreviewState,
   type PreviewState,
-} from "@/components/gated-section-with-dev-picker";
+} from "@/src/lib/paywall/preview-state";
 
 interface PageProps {
   searchParams?: Promise<{ previewState?: string }>;

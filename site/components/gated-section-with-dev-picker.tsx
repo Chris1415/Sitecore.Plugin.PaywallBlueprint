@@ -29,15 +29,10 @@ import { AllowedState } from "@/src/lib/paywall/states/AllowedState";
 import { NoSubscriptionState } from "@/src/lib/paywall/states/NoSubscriptionState";
 import { SeatsFullState } from "@/src/lib/paywall/states/SeatsFullState";
 import { UserUnassignedState } from "@/src/lib/paywall/states/UserUnassignedState";
-
-type PreviewState = "allowed" | "no-sub" | "seats-full" | "unassigned" | null;
+import type { PreviewState } from "@/src/lib/paywall/preview-state";
 
 interface Props {
   initialPreviewState?: PreviewState;
-}
-
-function isValidPreviewState(s: string | undefined): s is Exclude<PreviewState, null> {
-  return s === "allowed" || s === "no-sub" || s === "seats-full" || s === "unassigned";
 }
 
 function renderGatedContent(preview: PreviewState): React.ReactNode {
@@ -128,5 +123,5 @@ export function GatedSectionWithDevPicker({ initialPreviewState = null }: Props)
   );
 }
 
-export { isValidPreviewState };
-export type { PreviewState };
+// Type + validator moved to src/lib/paywall/preview-state.ts (pure TS shared module)
+// so server components can use them without crossing the client boundary.
