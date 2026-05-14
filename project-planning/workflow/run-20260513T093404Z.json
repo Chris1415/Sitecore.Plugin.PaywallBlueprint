@@ -172,7 +172,7 @@
       "T012": "passed 2026-05-13T21:00Z (operator: 'all looks good go ahead')",
       "notes": "Tranche A complete. T011 gate: lint 0 errors (3 pre-existing upstream warnings), tsc exit 0, test 8/8 pass, build exit 0. T012 passed after /full-page route was added + manifest updated. Ready for Tranche B."
     },
-    "current_tranche": "D",
+    "current_tranche": "E",
     "tranche_b_progress": {
       "T013": "completed (probe captured 2026-05-13T21:30Z; fixtures at sdk-fixtures/)",
       "T014": "completed (.d.ts verification report)",
@@ -201,6 +201,15 @@
       "recorded_at": "2026-05-13T21:00:00Z",
       "evidence": "Operator confirmed 'all looks good go ahead' after route correction (/full-page added + manifest updated). Cloud Portal iframe loaded the shell over ngrok tunnel to localhost:3000.",
       "notes": "Operator registered Cloud Portal app with canonical /full-page route; required adding site/app/full-page/page.tsx as re-export of root shell.",
+      "category": "live_walkthrough"
+    },
+    "T046_tranche_d_env_flag_dev_override": {
+      "required_by": "PRD-000 \u00a7 12 Tranche D operator gate (env-flag + dev override + DCE verification)",
+      "description": "Verify NEXT_PUBLIC_PAYWALL_ENABLED=false renders banner + gate disabled; revert; verify NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID short-circuits to allowed when sub matches; production DCE confirmed.",
+      "outcome": "passed",
+      "recorded_at": "2026-05-14T08:45:00Z",
+      "evidence": "Operator confirmed 'all pass and successful'. Banner toggle works, dev override short-circuits to AllowedState when user.sub matches, production DCE confirmed via scripts/test-dce.sh (literal absent from .next/static/ and .next/server/ *.js bundles; source maps still contain it as expected for debug parity).",
+      "notes": "Naming: dev override is NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID (with NEXT_PUBLIC_ prefix) because PaywallGate is a Client Component and server-only env vars are inaccessible. Compile-time DCE works via the NODE_ENV !== 'production' guard regardless of the prefix \u2014 Webpack constant-folds the branch to false in production builds.",
       "category": "live_walkthrough"
     },
     "T039_tranche_c_challenge_gate": {
