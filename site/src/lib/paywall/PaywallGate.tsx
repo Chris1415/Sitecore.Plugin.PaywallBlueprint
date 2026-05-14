@@ -99,10 +99,38 @@ export function PaywallGate({ children, store, onStateChange }: PaywallGateProps
   const userId =
     typeof hostUser?.sub === "string" ? (hostUser.sub as string) : "";
 
-  // FR-1 Step 4 — dev-override stub (T041 wires this in Tranche D)
-  // TODO: T041 — dev override compile-time guard
-  // NFR-5: compile-time guard uses process.env.NODE_ENV !== 'production'
-  // if (process.env.NODE_ENV !== 'production' && ...) { ... }
+  // ---------------------------------------------------------------------------
+  // FR-1 Step 4 — dev override (compile-time guarded, NFR-5)
+  //
+  // Env var: NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID
+  // Named NEXT_PUBLIC_ because this is a Client Component and cannot access
+  // server-only env vars at runtime. The NODE_ENV !== 'production' guard ensures
+  // Webpack/Next.js DCE removes this entire branch from production bundles:
+  // Next.js statically replaces process.env.NODE_ENV at build time, so the
+  // constant-folded condition `false && ...` is dead-code-eliminated by bundler.
+  //
+  // NEVER use a variable reference for process.env.NODE_ENV — the EXACT literal
+  // `process.env.NODE_ENV !== 'production'` is required for constant-folding.
+  //
+  // Verified by: `npm run test:dce` post-build grep of .next/ for the var name.
+  // T046 gate: operator confirms short-circuit on real tenant without Supabase entry.
+  //
+  // NFR-5: Compile-time dev override. Webpack DCE removes this branch in production.
+  // Tranche D gate verifies via post-build grep of .next/ for NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID.
+  // ---------------------------------------------------------------------------
+  if (
+    process.env.NODE_ENV !== "production" &&
+    process.env.NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID &&
+    process.env.NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID === hostUser?.sub
+  ) {
+    // Short-circuit: render children as if allowed.
+    // DevOverridePassthrough uses a ref pattern to avoid conditional hook calls.
+    return (
+      <DevOverridePassthrough onStateChange={onStateChange}>
+        {children}
+      </DevOverridePassthrough>
+    );
+  }
 
   // FR-1 Steps 5 + 6 — async fetch + state render (in PaywallGateInner to keep hooks clean)
   return (
@@ -140,6 +168,37 @@ function DemoPassthrough({
     if (!firedRef.current) {
       firedRef.current = true;
       callbackRef.current?.("demo");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return <>{children}</>;
+}
+
+// ---------------------------------------------------------------------------
+// DevOverridePassthrough — handles FR-1 Step 4 (dev override short-circuit)
+// Separated so hooks (useEffect) are not called conditionally in PaywallGate.
+// This component is compile-time dead-code-eliminated in production builds
+// because it is only referenced inside the NODE_ENV !== 'production' branch.
+// ---------------------------------------------------------------------------
+function DevOverridePassthrough({
+  children,
+  onStateChange,
+}: {
+  children: React.ReactNode;
+  onStateChange?: PaywallGateProps["onStateChange"];
+}) {
+  const firedRef = useRef(false);
+  const callbackRef = useRef(onStateChange);
+
+  useEffect(() => {
+    callbackRef.current = onStateChange;
+  });
+
+  useEffect(() => {
+    if (!firedRef.current) {
+      firedRef.current = true;
+      callbackRef.current?.("dev-override");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

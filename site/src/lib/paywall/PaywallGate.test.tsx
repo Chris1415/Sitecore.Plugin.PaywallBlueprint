@@ -303,3 +303,91 @@ describe("PaywallGate — env-flag false → children verbatim (T036a)", () => {
     expect(onStateChange).toHaveBeenCalledWith("demo");
   });
 });
+
+// ---------------------------------------------------------------------------
+// T042a (RED) — Dev override tests
+// These tests FAIL until T041 implements the compile-time-guarded override.
+//
+// Dev override env var: NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID
+// Named NEXT_PUBLIC_ because PaywallGate is a Client Component and cannot read
+// server-only env vars at runtime. NODE_ENV !== 'production' guard ensures
+// Webpack DCE removes the entire branch from production bundles (NFR-5).
+// ---------------------------------------------------------------------------
+
+describe("PaywallGate — dev override — happy path (T042a)", () => {
+  it("short-circuits to children when override matches hostUser.sub in non-production", async () => {
+    // NODE_ENV is 'test' in Vitest — not 'production', so override should apply
+    vi.stubEnv("NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID", "auth0|dev-override-user");
+    // Mock host user with matching sub
+    mockUseHostUser.mockReturnValue({
+      given_name: "Dev",
+      sub: "auth0|dev-override-user",
+    });
+    const onStateChange = vi.fn();
+    // Store resolves 'no subscription' — override should prevent store call
+    const store = makeStubStore({ status: "tenant_no_subscription" });
+
+    render(
+      <PaywallGate store={store} onStateChange={onStateChange}>
+        <div>override children</div>
+      </PaywallGate>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("override children")).toBeTruthy();
+    });
+    // Store MUST NOT be called — override short-circuits before fetch
+    expect(store.getEntitlement).not.toHaveBeenCalled();
+    // onStateChange MUST be called with 'dev-override'
+    expect(onStateChange).toHaveBeenCalledWith("dev-override");
+  });
+});
+
+describe("PaywallGate — dev override — user-ID mismatch (T042a)", () => {
+  it("calls store normally when override does not match hostUser.sub", async () => {
+    vi.stubEnv("NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID", "auth0|dev-override-user");
+    // Mock host user with a DIFFERENT sub
+    mockUseHostUser.mockReturnValue({
+      given_name: "Other",
+      sub: "auth0|different-user",
+    });
+    const store = makeStubStore({ status: "allowed" });
+
+    render(
+      <PaywallGate store={store}>
+        <div>normal children</div>
+      </PaywallGate>
+    );
+
+    // Store IS called because override doesn't match
+    await waitFor(() => {
+      expect(store.getEntitlement).toHaveBeenCalled();
+    });
+  });
+});
+
+describe("PaywallGate — dev override — production guard (T042a)", () => {
+  it("calls store normally when NODE_ENV=production (override stripped at compile time)", async () => {
+    // In a real production build, Webpack DCE removes the branch entirely.
+    // In Vitest, we simulate the runtime fallback by setting NODE_ENV='production'.
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID", "auth0|dev-override-user");
+    // Mock host user with matching sub — if override were active, it would short-circuit
+    mockUseHostUser.mockReturnValue({
+      given_name: "Prod",
+      sub: "auth0|dev-override-user",
+    });
+    const store = makeStubStore({ status: "allowed" });
+
+    render(
+      <PaywallGate store={store}>
+        <div>prod children</div>
+      </PaywallGate>
+    );
+
+    // Store IS called — production guard means override has no effect
+    await waitFor(() => {
+      expect(store.getEntitlement).toHaveBeenCalled();
+    });
+  });
+});

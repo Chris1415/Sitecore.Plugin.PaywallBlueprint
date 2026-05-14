@@ -20,6 +20,7 @@ import Topbar from "@/components/bloks/top-bar";
 import { Separator } from "@/components/ui/separator";
 import { FreeSection } from "@/components/free-section";
 import { GatedSectionWithDevPicker } from "@/components/gated-section-with-dev-picker";
+import { DemoModeBanner } from "@/src/lib/paywall/DemoModeBanner";
 import {
   isValidPreviewState,
   type PreviewState,
@@ -48,7 +49,11 @@ export default async function Page({ searchParams }: PageProps) {
         rightSideItems={[]}
       />
 
-      {/* Tranche D (T040): <DemoModeBanner /> inserted here when env-flag is false */}
+      {/* Tranche D (T040): DemoModeBanner — rendered when env-flag is 'false' (ADR-0004) */}
+      {/* NEXT_PUBLIC_* vars are inlined at build time; string === 'false' is correct check */}
+      {process.env.NEXT_PUBLIC_PAYWALL_ENABLED === "false" && (
+        <DemoModeBanner />
+      )}
 
       {/* Page shell — centered, max ~880px wide per UI spec § 3.1 */}
       <main className="flex-1 max-w-[880px] mx-auto w-full px-6 pt-6 pb-8 flex flex-col gap-6">
