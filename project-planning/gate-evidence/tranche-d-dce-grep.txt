@@ -1,0 +1,11 @@
+Tranche D — DCE Grep Verification
+Run date: 2026-05-13
+Build: npm run build (Next.js 16.1.7, NODE_ENV=production)
+Grep target: NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID
+Grep scope: .next/static/ and .next/server/ *.js bundles (source maps excluded)
+
+Result:
+OK: NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID literal not present in .next/static/ or .next/server/ *.js bundles (compile-time DCE confirmed).
+
+Verdict: PASS — compile-time tree-shaking via NODE_ENV !== 'production' guard confirmed.
+The entire dev-override branch is absent from the production JS bundles.
