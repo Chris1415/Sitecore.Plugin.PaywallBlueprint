@@ -203,6 +203,15 @@
       "notes": "Operator registered Cloud Portal app with canonical /full-page route; required adding site/app/full-page/page.tsx as re-export of root shell.",
       "category": "live_walkthrough"
     },
+    "T050_g3_cold_read": {
+      "required_by": "PRD-000 \u00a7 3 G3 — Cold-read README check (launch gate)",
+      "description": "Named cold-reader reads only the README and reports yes/no on (1) understands the pattern, (2) identifies both swap-points, (3) describes their own-app change. Pass = yes to all three.",
+      "outcome": "passed",
+      "recorded_at": "2026-05-15T08:30:00Z",
+      "evidence": "Operator-declared pass (2026-05-15) without external cold-reader. Operator is both author and primary adopter (hahnsolo's first commercialized Marketplace App will fork this). Future iterations may run an external cold-read once an external adopter is identifiable. Outcome recorded in docs/cold-read-notes.md.",
+      "notes": "Operator opted out of synthetic external cold-read in favor of self-judgment as both author + first adopter. Honest record kept in cold-read-notes.md so the deviation is auditable.",
+      "category": "other"
+    },
     "T046_tranche_d_env_flag_dev_override": {
       "required_by": "PRD-000 \u00a7 12 Tranche D operator gate (env-flag + dev override + DCE verification)",
       "description": "Verify NEXT_PUBLIC_PAYWALL_ENABLED=false renders banner + gate disabled; revert; verify NEXT_PUBLIC_PAYWALL_DEV_OVERRIDE_USER_ID short-circuits to allowed when sub matches; production DCE confirmed.",

@@ -3,7 +3,7 @@
 Per PRD-000 § 3 G3 — a named cold-reader reads only the README and reports whether they can:
 
 1. Understand the pattern
-2. Identify the two swap-points (EntitlementStore + PaymentProvider)
+2. Identify the two swap-points (`EntitlementStore` + `PaymentProvider`)
 3. Describe what they'd change for their own app
 
 **Pass criteria:** Yes to all three.
@@ -12,39 +12,21 @@ Per PRD-000 § 3 G3 — a named cold-reader reads only the README and reports wh
 
 ## Cold-reader
 
-- **Name:** <to be filled in by operator>
-- **Context:** <colleague / contractor / LLM in clean context>
-- **Date read:** <YYYY-MM-DD>
+- **Name:** Christian Hahn (operator; self-review)
+- **Context:** Operator declared pass without running an external cold-reader. As both the author and the primary adopter of this blueprint (hahnsolo's first commercialized Marketplace App will fork this), the operator judged the README + smoke-walkthrough + ADR set sufficient for ship.
+- **Date read:** 2026-05-15
 
 ## Outcome
 
-- **(1) Understands the pattern:** <yes/no — one-line summary of their description>
-- **(2) Identifies swap-points:** <yes/no — did they name EntitlementStore AND PaymentProvider?>
-- **(3) Describes their app change:** <yes/no — one-line summary of what they said>
+- **(1) Understands the pattern:** Yes. The README walks through the four parts (`<PaywallGate>` + `EntitlementStore` + `PaymentProvider` + reference app) with a quickstart that maps to the actual code.
+- **(2) Identifies swap-points:** Yes. Both interfaces are named explicitly in `What's inside`, in `Two abstraction boundaries`, and in the adoption guide.
+- **(3) Describes their app change:** Yes. The adoption guide enumerates the primary path (fork the repo) and the secondary path (copy `src/lib/paywall/`), and the Provider swap-point section inlines the Stripe wiring shape so adopters don't need external research docs.
 
 ## Pass / fail
 
-**PASS** | **FAIL** (operator strikes one)
+**PASS** (operator-declared 2026-05-15)
 
 ## Notes
 
-<any operator observations about what made the README easy or hard to grok>
-
----
-
-## Instructions for the operator
-
-1. Send the cold-reader ONLY the README (paste the content or share the repo URL once
-   public — do not share this file, the task breakdown, or any other planning artifacts).
-2. Ask them these three questions verbatim:
-   - "After reading the README, can you explain in one sentence what the Paywall Blueprint
-     pattern does?"
-   - "Can you name the two swap-points — the interfaces an adopter would replace to bring
-     their own backend or payment provider?"
-   - "Can you describe one specific thing you would change or replace to use this in your
-     own Sitecore Marketplace App?"
-3. Record their responses (paraphrased is fine) in the Outcome section above.
-4. If the cold-reader FAILS any criterion: revise the README (T047) and repeat with a
-   fresh reader. Do not re-test the same person — they are no longer cold.
-5. Commit this file once the outcome is recorded. G3 PASS is required before T055/T056
-   (repo public flip).
+- This is hahnsolo's own blueprint shipping public for the first time; the operator's dual role (author + first adopter) makes the cold-read formality less critical than it would be for a third-party-only launch. Recording the outcome honestly: no external party reviewed the README before flip-public, but the operator's own judgment is the binding signal here.
+- Future iterations (PRD-001+) should consider an external cold-read once the first external adopter is identifiable — that signal is more valuable than a synthetic cold-read at this stage.
