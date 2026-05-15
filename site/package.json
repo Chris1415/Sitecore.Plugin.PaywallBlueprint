@@ -16,6 +16,7 @@
     "test:dce": "bash scripts/test-dce.sh"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^2.16.2",
     "@mdi/js": "^7.4.47",
     "@sitecore-marketplace-sdk/client": "^0.3.2",
     "@sitecore-marketplace-sdk/xmc": "^0.4.1",
