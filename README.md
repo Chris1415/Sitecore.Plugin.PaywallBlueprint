@@ -15,21 +15,31 @@ Portal who want a real, documented reference — not a toy demo.
 
 ## Screenshots
 
-The clickdummy HTML files below are the canonical visual references for each UX state. The
-operator will replace these with Cloud Portal screenshots before the repo is flipped public.
+Captured from the running app inside the Sitecore Cloud Portal `xmc:fullscreen` iframe.
 
-| State | Reference |
-|-------|-----------|
-| Allowed (tenant has an active plan) | [`pocs/poc-v1-prd000/state-allowed.html`](pocs/poc-v1-prd000/state-allowed.html) |
-| No subscription | [`pocs/poc-v1-prd000/state-no-subscription.html`](pocs/poc-v1-prd000/state-no-subscription.html) |
-| All seats in use | [`pocs/poc-v1-prd000/state-seats-full.html`](pocs/poc-v1-prd000/state-seats-full.html) |
-| User unassigned | [`pocs/poc-v1-prd000/state-unassigned.html`](pocs/poc-v1-prd000/state-unassigned.html) |
-| Demo mode (paywall disabled) | [`pocs/poc-v1-prd000/state-demo-mode.html`](pocs/poc-v1-prd000/state-demo-mode.html) |
-| Error fallback | [`pocs/poc-v1-prd000/state-error.html`](pocs/poc-v1-prd000/state-error.html) |
+### Allowed — tenant has an active plan
 
-> Operator note: capture screenshots from the running app (`npm run dev` inside the real
-> Cloud Portal iframe) and save them to `docs/screenshots/`. Then replace the table above
-> with `![Allowed state](docs/screenshots/state-allowed.png)` etc.
+![Allowed state — Welcome with real identity](docs/screenshots/state-allowed.png)
+
+Renders when `SupabaseStore.getEntitlement(marketplaceAppTenantId, …)` returns `{ status: 'allowed' }`. The welcome heading and tenant name are sourced live from `host.user.given_name` and `application.context.resourceAccess[0].tenantDisplayName` (defensive fallback chain per FR-9).
+
+### No subscription — tenant has no active plan
+
+![No subscription state — Start your subscription](docs/screenshots/state-no-subscription.png)
+
+Renders when the `tenants` row is missing or `status !== 'active'`. Clicking **View plans** opens a placeholder dialog (€0.99 lifetime); PRD-001 replaces it with a real Stripe Checkout flow.
+
+### Seats full — design-reference (PRD-000 evaluator never produces this)
+
+![Seats full state — All seats in use](docs/screenshots/state-seats-full.png)
+
+A design-reference component shipped for adopters and for PRD-002 to wire. PRD-000 evaluator is tenant-only per [ADR-0011](project-planning/ADR/adr-0011-tenant-only-entitlement-prd000.md); rendered via the in-page dev picker or `?previewState=seats-full`.
+
+### User unassigned — design-reference (PRD-000 evaluator never produces this)
+
+![User unassigned state — Ask your team admin](docs/screenshots/state-unassigned.png)
+
+Second design-reference component. No CTA in PRD-000 (deliberate per PRD US-3 — disabled buttons read as broken to adopters). PRD-002 adds the "Request seat" notification flow.
 
 ---
 

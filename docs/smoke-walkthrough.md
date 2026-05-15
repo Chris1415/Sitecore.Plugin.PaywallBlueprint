@@ -62,10 +62,7 @@ Before walking any state, complete the one-time setup:
 
 **Screenshot reference:**
 
-![Iframe install — allowed state](../pocs/poc-v1-prd000/state-allowed.html)
-
-> Operator: replace with `docs/screenshots/tranche-a-iframe-render.png` captured from
-> Cloud Portal after T012 passes.
+![Iframe install — allowed state](screenshots/state-allowed.png)
 
 ---
 
@@ -89,9 +86,7 @@ npm run seed:state -- allowed --tenant <your-marketplaceAppTenantId>
 
 **Screenshot reference:**
 
-![Context-grounded welcome](../pocs/poc-v1-prd000/state-allowed.html)
-
-> Operator: replace with `docs/screenshots/tranche-b-context-grounded-welcome.png`.
+![Context-grounded welcome](screenshots/state-allowed.png)
 
 ---
 
@@ -108,9 +103,7 @@ npm run seed:state -- allowed --tenant <your-marketplaceAppTenantId>
 
 **Screenshot reference:**
 
-![Allowed state](../pocs/poc-v1-prd000/state-allowed.html)
-
-> Operator: replace with `docs/screenshots/tranche-c-allowed.png`.
+![Allowed state](screenshots/state-allowed.png)
 
 ---
 
@@ -129,9 +122,7 @@ npm run seed:state -- no-sub --tenant <your-marketplaceAppTenantId>
 
 **Screenshot reference:**
 
-![No subscription state](../pocs/poc-v1-prd000/state-no-subscription.html)
-
-> Operator: replace with `docs/screenshots/tranche-c-no-sub.png`.
+![No subscription state](screenshots/state-no-subscription.png)
 
 ---
 
@@ -154,9 +145,7 @@ ADR-0011 (PRD-000 evaluator never returns this variant; PRD-002 wires the routin
 
 **Screenshot reference:**
 
-![Seats full state](../pocs/poc-v1-prd000/state-seats-full.html)
-
-> Operator: replace with `docs/screenshots/tranche-c-seats-full.png`.
+![Seats full state](screenshots/state-seats-full.png)
 
 ---
 
@@ -176,9 +165,7 @@ Opens `http://localhost:3000/?previewState=unassigned`. Evaluator bypassed per A
 
 **Screenshot reference:**
 
-![User unassigned state](../pocs/poc-v1-prd000/state-unassigned.html)
-
-> Operator: replace with `docs/screenshots/tranche-c-unassigned.png`.
+![User unassigned state](screenshots/state-unassigned.png)
 
 ---
 
@@ -199,9 +186,8 @@ Opens `http://localhost:3000/?previewState=unassigned`. Evaluator bypassed per A
 
 **Screenshot reference:**
 
-![Error fallback](../pocs/poc-v1-prd000/state-error.html)
-
-> Operator: replace with `docs/screenshots/tranche-c-error-fallback.png`.
+> Screenshot omitted (operator chose not to capture error/banner states).
+> Error fallback structure preserved as a code reference in `src/components/error-boundary.tsx`.
 
 **Cleanup:** Restore the real Supabase URL and restart the dev server.
 
@@ -223,9 +209,8 @@ Opens `http://localhost:3000/?previewState=unassigned`. Evaluator bypassed per A
 
 **Screenshot reference:**
 
-![Demo mode banner](../pocs/poc-v1-prd000/state-demo-mode.html)
-
-> Operator: replace with `docs/screenshots/tranche-d-banner-on.png`.
+> Screenshot omitted (operator chose not to capture error/banner states).
+> Banner copy locked verbatim in `src/lib/paywall/DemoModeBanner.tsx`.
 
 **Cleanup:** Set `NEXT_PUBLIC_PAYWALL_ENABLED=true` and restart.
 
