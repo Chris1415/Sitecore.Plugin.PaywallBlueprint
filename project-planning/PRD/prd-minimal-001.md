@@ -30,15 +30,20 @@ Add **Stripe direct as v1 provider** to the shipped paywall-blueprint. Migrate s
   - Test-mode keys in `site/.env.local`
   - Webhook endpoint created in Tranche D, not Tranche A
 - **Scaffold migration (Tranche A):** apply `sitecore:setup-marketplace-full-stack` in-place over the existing 4a scaffold. Existing 74 tests MUST continue to pass after migration.
-- **Webhook signature verification:** every POST verified via `stripe.webhooks.constructEvent(rawBody, sig, endpointSecret)`. Bad signature → 401. No exception.
+- **Webhook signature verification:** every POST verified via `stripe.webhooks.constructEvent(rawBody, sig, endpointSecret)`. Bad signature → **400** (Stripe convention; Stripe does not retry 4xx). No exception.
 - **Webhook idempotency:** INSERT INTO `processed_events (event_id) ON CONFLICT DO NOTHING`; on conflict → return 200 silently. Replay-safe.
 - **Webhook handler latency:** ≤ 5 seconds total (Stripe retries on >5s).
-- **`/api/checkout` orphan recovery:** look up Customer by `metadata.tenant_id` via `stripe.customers.list({ email })` BEFORE creating new. ADR-0015 contract.
+- **`/api/checkout` orphan recovery:** look up Customer by `metadata.app_slug === 'paywall-blueprint'` via `stripe.customers.list({ email })` BEFORE creating new. Multi-candidate handling: pick most-recently-created; log discarded as warning. ADR-0015 contract (revised post-critical-review with app_slug scoping).
 - **`/api/checkout` idempotency key:** use `tenantId` as Stripe idempotency key to dedupe concurrent calls.
 - **`automatic_tax: { enabled: true }` in Checkout Session config** (NFR-9). Adopters disable per `StripeProvider.ts` if Stripe Tax not configured in their dashboard.
 - **Server-only env vars:** `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SIGNING_SECRET` — no `NEXT_PUBLIC_` prefix. Build-time grep test enforces this.
-- **`useEntitlement` postMessage + polling parallel race** — whichever wins, the other shuts down. Polling: 3s interval, 30s cap (10 polls).
-- **`/api/entitlement` runs server-side via `SUPABASE_SECRET_KEY` (service-role)** — bypasses RLS for the read; caller auth deferred to PRD-002+.
+- **`useEntitlement` polling is primary (load-bearing); postMessage is fastest-path sugar** (ADR-0014 revised). `window.opener` is frequently `null` from sandboxed iframes in modern browsers. Polling: 3s interval, 30s cap (10 polls). postMessage triggers an *immediate* poll but does NOT stop polling — only `status === 'allowed'` or timeout stops it. Atomicity: single useState; first signal wins.
+- **`/api/entitlement` runs server-side via `SUPABASE_SECRET_KEY` (service-role)** — bypasses RLS for the read. **UNAUTHENTICATED in v1** (documented known limitation; README warns adopters). PRD-002 hardens via `host.user.sub` verification.
+- **Tranche B includes `checkout.session.completed` event dispatch** (not deferred to Tranche D). Tranche C's smoke gate needs this to actually upsert `tenants` rows. Tranche D ships only the 5 remaining forward-compat event types.
+- **Stripe error translation in `/api/checkout`** — map known codes (`tax_settings_not_set`, `resource_missing`, `rate_limit`, etc.) to user-friendly messages BEFORE returning to client. Dialog renders the translated message; never the raw Stripe error.
+- **Dialog Cancel stays enabled mid-flight.** Closing the dialog stops in-iframe polling but does NOT close the Stripe Checkout tab. If user later completes payment, next gate evaluation reflects it. Documented in README.
+- **Unhandled Stripe event types (e.g., `charge.refunded`) → 200 silently.** Acknowledged but no-op. Adopters who want refund handling add their own `charge.refunded` handler.
+- **Public API barrel:** `src/lib/paywall/index.ts` re-exports the adopter-facing surface (PaywallGate, PaywallCheckoutDialog, DemoModeBanner, useEntitlement, state components, types). Deep-path imports stay legal but the barrel is canonical.
 - **`PaywallCheckoutDialog` button copy:** primary "Subscribe — €0.99 lifetime"; secondary "Cancel". Spinner during in-flight. Locked.
 - **`/paywall-return` page:** writes `window.opener.postMessage({ type: 'paywall:refresh' }, origin)` + closes; secondary signal via sessionStorage. Server-rendered with client-side mount handler.
 - **Stack:** Next.js 16+ App Router, TypeScript strict, `stripe` Node SDK (latest at install), Vitest, existing `@sitecore-marketplace-sdk/client` + Supabase clients.

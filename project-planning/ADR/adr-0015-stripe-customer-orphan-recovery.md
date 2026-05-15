@@ -21,6 +21,8 @@ Option (b) costs ~300ms per checkout in exchange for structural orphan immunity.
 `/api/checkout` runs the following orphan-recovery flow before creating a new Stripe Customer:
 
 ```typescript
+const APP_SLUG = 'paywall-blueprint'; // scope-tag — see "app_slug invariant" below
+
 async function findOrCreateStripeCustomer({ tenantId, userEmail }): Promise<Customer> {
   // 1. Check our DB first (fast path — tenant_id already mapped)
   const { data: tenant } = await supabase
@@ -30,32 +32,45 @@ async function findOrCreateStripeCustomer({ tenantId, userEmail }): Promise<Cust
   }
 
   // 2. Orphan-recovery: search Stripe for an existing Customer with this email
-  //    that was previously created for ANY tenant_id (covers reinstall case).
+  //    that this app created (scoped by metadata.app_slug — don't clobber
+  //    other apps the adopter runs from the same Stripe account).
   const existing = await stripe.customers.list({ email: userEmail, limit: 10 });
-  const previouslyOurs = existing.data.find(c => c.metadata?.tenant_id);
+  const ours = existing.data
+    .filter(c => c.metadata?.app_slug === APP_SLUG)
+    .sort((a, b) => b.created - a.created); // most-recently-created first
 
-  if (previouslyOurs) {
-    // Update metadata to current tenant_id (preserves billing history)
-    await stripe.customers.update(previouslyOurs.id, {
-      metadata: { ...previouslyOurs.metadata, tenant_id: tenantId }
+  if (ours.length === 0) {
+    // 3a. No existing Customer; create new.
+    return await stripe.customers.create({
+      email: userEmail,
+      metadata: { tenant_id: tenantId, app_slug: APP_SLUG }
     });
-    return previouslyOurs;
   }
 
-  // 3. No existing Customer; create new
-  return await stripe.customers.create({
-    email: userEmail,
-    metadata: { tenant_id: tenantId }
+  if (ours.length > 1) {
+    // 3b. Multiple candidates — likely a prior race. Pick most-recently-created
+    //     and log the discarded ones so adopter can review + clean up.
+    console.warn(
+      `[PaywallBlueprint] Multiple Stripe Customers found for ${userEmail}; using ${ours[0].id}. Discarded:`,
+      ours.slice(1).map(c => c.id)
+    );
+  }
+
+  // 3c. Single (or first-of-N) candidate — re-key metadata.tenant_id to current value.
+  await stripe.customers.update(ours[0].id, {
+    metadata: { ...ours[0].metadata, tenant_id: tenantId, app_slug: APP_SLUG }
   });
+  return ours[0];
 }
 ```
 
 **Key invariants:**
 
-- `metadata.tenant_id` is the source of truth that Stripe knows about — set on EVERY create + update.
-- Email is the recovery key — assumes the user re-installing has the same Auth0 identity.
-- If multiple Stripe Customers exist for the same email (e.g., one for each fork the user has tried), we re-key the first one with metadata. Acceptable; later iterations can scope by `metadata.fork_id` or similar.
-- Stripe API: `customers.list` is paginated; default page size of 10 is fine for the lookup. If a single user has >10 historical customer records, edge-case handling in PRD-002+.
+- **`metadata.app_slug` is the scope-tag.** Every Customer this app creates gets `metadata.app_slug = 'paywall-blueprint'`. Orphan-recovery only considers Customers matching this slug. Adopters who fork the blueprint MUST change the slug constant to match their app (e.g., `metadata.app_slug = 'redirect-manager'`) so the orphan-recovery doesn't cross app boundaries when one Stripe account hosts multiple Marketplace apps.
+- **`metadata.tenant_id` is the per-Customer reverse mapping.** Set on every create + update.
+- **Email is the recovery key** — assumes the user re-installing has the same Auth0 identity.
+- **Multi-candidate handling:** if 2+ Customers match (e.g., concurrent checkout race from earlier sessions), pick most-recently-created and log discarded candidates as a warning. Adopters can use the discarded IDs to clean up via Stripe Dashboard.
+- **Stripe API:** `customers.list` is paginated; default page size of 10 is fine. If a single user has >10 historical Customer records for this app, edge-case handling in PRD-002+ (currently: the list returns the most-recently-active 10, which is the right set 99% of the time).
 
 ## Consequences
 

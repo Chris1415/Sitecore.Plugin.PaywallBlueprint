@@ -20,17 +20,18 @@ The Cloud Portal iframe's sandbox attributes (captured during T013 probe) includ
 
 Research § 8.7 Q3 explicitly flagged this as an open SDK question for PRD-001. Without a real probe to confirm postMessage works (and operator decided not to probe — D4), we need a fallback path.
 
-## Decision
+## Decision (revised post-critical-review 2026-05-15)
 
-Implement **both** mechanisms in parallel — postMessage primary + polling fallback.
+Implement **both** mechanisms in parallel — but the realistic priority order is **polling primary; postMessage is fastest-path sugar when available**. Reasoning surfaced in critical review: modern browsers (Chrome 88+, Firefox 79+, recent Safari) default new tabs opened via `window.open()` from sandboxed iframes to `noopener` — meaning `window.opener` in the new tab is **`null`** in most environments. PostMessage is not just "blocked by sandbox" but structurally unavailable.
 
-**`useEntitlement` hook orchestrates:**
+**`useEntitlement` hook orchestrates (revised contract):**
 
 1. When `triggerCheckout()` is called, immediately `window.open(stripe-checkout-url, '_blank')`.
-2. Register a `message` event listener on `window` for type `paywall:refresh` (postMessage path).
-3. Simultaneously start a `setInterval(3000)` poll of `/api/entitlement` (polling path).
-4. When EITHER fires successfully (entitlement → allowed), update local state and tear down both paths (clear listener + clear interval).
-5. If 30 seconds elapse without either succeeding, stop polling and show a non-blocking "May take a moment — refresh if it doesn't update" toast.
+2. **Start polling immediately:** `setInterval(3000)` poll of `/api/entitlement` — this is the load-bearing path.
+3. **Register a `message` event listener** on `window` for type `paywall:refresh` — best-effort sugar.
+4. If `postMessage` arrives: trigger an *immediate poll* (resets the next-poll-due timer to now). Do NOT stop polling on postMessage receipt — the message only signals "the user has returned from Stripe Checkout"; the actual entitlement state must still be confirmed via the poll.
+5. Polling stops when `/api/entitlement` returns `status === 'allowed'` (success) OR 30 seconds total elapse from `window.open` (timeout).
+6. **Atomicity:** the success signal is set via `useState<Signal | null>(null)` with `setState((prev) => prev ?? signal)` — first signal wins, subsequent calls are no-ops. Both interval and listener clear on first non-null state.
 
 **`/paywall-return` page** (Stripe `success_url` target):
 

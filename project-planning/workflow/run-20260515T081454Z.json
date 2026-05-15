@@ -217,6 +217,15 @@
       "raised_at": "2026-05-15T08:45:00Z",
       "resolved_at": null,
       "references": "PRD-001 \u00a7 14 OA-001-8"
+    },
+    {
+      "stage": "critical_review",
+      "severity": "info",
+      "kind": "resolved",
+      "item": "PRD-001 critical review (standard rigor) produced ~25 findings; operator chose 'follow recommendations' \u2192 11 fixes applied (1 blocker + 4 high + 6 medium). Release plan restructured: Tranche B now includes `checkout.session.completed` event dispatch (was deferred to Tranche D as a release-plan bug). ADR-0014 reframed: polling is primary, postMessage is fastest-path-when-available. NFR-7 documents `/api/entitlement` unauthenticated in v1 with README warning. 6 LOW findings deferred / accepted (CHANGELOG flags + Tranche A commit shape + cold-read inheritance + `/api/portal` 501 status + webhook event ordering + `STRIPE_PRICE_ID` boot validation).",
+      "raised_at": "2026-05-15T09:30:00Z",
+      "resolved_at": "2026-05-15T09:30:00Z",
+      "references": "PRD-001 \u00a7 5 \u00a7 6 (US-1/US-3/US-5) \u00a7 7 (FR-2/FR-5/FR-7/FR-8) \u00a7 8 (NFR-7) \u00a7 9 \u00a7 11 \u00a7 12 \u00a7 14; ADR-0014 + ADR-0015 revised"
     }
   ],
   "notes": [
