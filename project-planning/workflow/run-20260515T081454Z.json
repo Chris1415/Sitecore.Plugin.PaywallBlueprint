@@ -2,10 +2,10 @@
   "schema_version": 6,
   "run_id": "20260515T081454Z",
   "created_at": "2026-05-15T08:14:54Z",
-  "updated_at": "2026-05-15T08:45:00Z",
+  "updated_at": "2026-05-15T10:00:00Z",
   "product_slug": "paywall-blueprint",
   "product_root": "products/paywall-blueprint",
-  "status": "spec_ready",
+  "status": "architecture_ready",
   "prd_input_mode": "prompt_only",
   "platform_target": "marketplace",
   "task_breakdown_style": "tdd",
@@ -106,6 +106,24 @@
       "exited_at": "2026-05-15T08:45:00Z",
       "outcome": "completed",
       "error": null
+    },
+    {
+      "stage": "architecture_ready",
+      "agent": "04-software-architect",
+      "entered_at": "2026-05-15T09:45:00Z",
+      "exited_at": "2026-05-15T10:00:00Z",
+      "outcome": "completed",
+      "error": null,
+      "notes": "Minimal track: no architecture blueprint file. ADR-density scan: 0 new ADRs added in this run (0012\u20130015 authored during /create-prd already cover PRD-001 decisions). SDK contract gate for `stripe` Node SDK deferred to Tranche A post-install per progressive-fixture-capture preference."
+    },
+    {
+      "stage": "ui_ready",
+      "agent": "05-ui-designer",
+      "entered_at": "2026-05-15T10:00:00Z",
+      "exited_at": "2026-05-15T10:00:00Z",
+      "outcome": "skipped",
+      "error": null,
+      "notes": "scope_dial.ui_variants=skip. No new UI surfaces in PRD-001; PRD-000's poc-v1-prd000/ remains the visual source of truth for PaywallCheckoutDialog."
     }
   ],
   "implementation": {
@@ -226,6 +244,33 @@
       "raised_at": "2026-05-15T09:30:00Z",
       "resolved_at": "2026-05-15T09:30:00Z",
       "references": "PRD-001 \u00a7 5 \u00a7 6 (US-1/US-3/US-5) \u00a7 7 (FR-2/FR-5/FR-7/FR-8) \u00a7 8 (NFR-7) \u00a7 9 \u00a7 11 \u00a7 12 \u00a7 14; ADR-0014 + ADR-0015 revised"
+    },
+    {
+      "stage": "architect",
+      "severity": "info",
+      "kind": "assumption",
+      "item": "SDK contract verification (rule 40-sdk-contracts) for the `stripe` Node SDK is DEFERRED to Tranche A post-install per operator's progressive-fixture-capture preference (memory: feedback_assumed_shapes_progressive_capture.md). Pre-install citation: https://stripe.com/docs/api for `stripe.checkout.sessions.create`, `stripe.customers.list/create/update/retrieve`, `stripe.webhooks.constructEvent`, `stripe.subscriptions.create` (forward-compat), `stripe.billingPortal.sessions.create` (PRD-003 stub). Post-install task suggestion for Tranche A: capture `.d.ts` paths for each method and update PRD-001 inline citations + RED test fixtures. Marketplace SDK (`@sitecore-marketplace-sdk/client` + `host.user`) shapes are already locked + cited from PRD-000 fixtures.",
+      "raised_at": "2026-05-15T10:00:00Z",
+      "resolved_at": null,
+      "references": "PRD-001 \u00a7 9 Stack additions; rule 40-sdk-contracts; feedback_assumed_shapes_progressive_capture.md"
+    },
+    {
+      "stage": "architect",
+      "severity": "info",
+      "kind": "decision",
+      "item": "Minimal-track /architect run completed: no architecture blueprint file produced (canonical_artifacts.architecture stays null per track=minimal). ADR scan of PRD-001 \u00a7 11 + revision notes confirmed: ADRs 0012\u20130015 cover all fundamental architectural decisions in PRD-001. Borderline candidates considered and rejected as ADR-worthy: (1) `/api/entitlement` unauthenticated in v1 \u2192 captured as NFR-7 with PRD-002 hardening plan; (2) public API barrel at `src/lib/paywall/index.ts` \u2192 implementation detail in PRD \u00a7 9; (3) `automatic_tax: true` default \u2192 configuration choice documented in NFR-9 + R5. ADR density: 4 new ADRs (0012\u20130015) authored during /create-prd; 0 added during /architect. Stays under the 5+ HARD STOP.",
+      "raised_at": "2026-05-15T10:00:00Z",
+      "resolved_at": "2026-05-15T10:00:00Z",
+      "references": "PRD-001 \u00a7 11 \u00a7 14 + ADR-0012/0013/0014/0015 + /architect step 2b-i ADR-density gate"
+    },
+    {
+      "stage": "architect",
+      "severity": "info",
+      "kind": "decision",
+      "item": "UI Designer (05) skipped per scope_dial.ui_variants=skip. PRD-001 introduces no new UI surfaces \u2014 the `PaywallCheckoutDialog` rewire (close \u2192 open Stripe Checkout tab) and the `/paywall-return` page are behavior changes inside already-designed surfaces. POC clickdummy from PRD-000 (poc-v1-prd000/) remains the visual source of truth for the dialog. No new POC needed.",
+      "raised_at": "2026-05-15T10:00:00Z",
+      "resolved_at": "2026-05-15T10:00:00Z",
+      "references": "scope_dial.ui_variants=skip; PRD-001 \u00a7 11; POC poc-v1-prd000/"
     }
   ],
   "notes": [
