@@ -2,10 +2,10 @@
   "schema_version": 6,
   "run_id": "20260515T081454Z",
   "created_at": "2026-05-15T08:14:54Z",
-  "updated_at": "2026-05-15T10:00:00Z",
+  "updated_at": "2026-05-15T11:00:00Z",
   "product_slug": "paywall-blueprint",
   "product_root": "products/paywall-blueprint",
-  "status": "architecture_ready",
+  "status": "qa_ready",
   "prd_input_mode": "prompt_only",
   "platform_target": "marketplace",
   "task_breakdown_style": "tdd",
@@ -39,7 +39,7 @@
     "prd": "products/paywall-blueprint/project-planning/PRD/prd-001.md",
     "prd_minimal": "products/paywall-blueprint/project-planning/PRD/prd-minimal-001.md",
     "architecture": null,
-    "task_breakdown": null,
+    "task_breakdown": "products/paywall-blueprint/project-planning/plans/task-breakdown-20260515T081454Z.md",
     "task_breakdown_pre_qa": null,
     "qa_report": null,
     "implementation_runbook": null,
@@ -124,6 +124,24 @@
       "outcome": "skipped",
       "error": null,
       "notes": "scope_dial.ui_variants=skip. No new UI surfaces in PRD-001; PRD-000's poc-v1-prd000/ remains the visual source of truth for PaywallCheckoutDialog."
+    },
+    {
+      "stage": "plan_ready",
+      "agent": "06-lead-developer",
+      "entered_at": "2026-05-15T10:00:00Z",
+      "exited_at": "2026-05-15T10:30:00Z",
+      "outcome": "completed",
+      "error": null,
+      "notes": "52 tasks (T001\u2013T052) across 5 tranches. \u00a7 4c all 7 subsections filled. 10 [OPERATOR] tasks (Stripe Dashboard, CLI install, real-tenant gates). 0 new ADR candidates from task planning. Auto-continuing to QA enrichment per scope_dial.task_breakdown_review=skip_gate."
+    },
+    {
+      "stage": "qa_ready",
+      "agent": "07-qa-specialist",
+      "entered_at": "2026-05-15T10:30:00Z",
+      "exited_at": "2026-05-15T11:00:00Z",
+      "outcome": "completed",
+      "error": null,
+      "notes": "Task breakdown enriched in place; 430\u2192805 lines. \u00a7 9 TDD contract (mandate + 6 exclusion categories + fixture provenance + iframe scope boundary + a11y + contrast waiver + host-frame smoke + latency caveat). \u00a7 10 added with 34 named RED scenarios across 12 test tasks. \u00a7 4b strengthened to 38 Task-ID-traceable rows (16 MUST-HAVE). \u00a7 4c extensions: /api/checkout response shape, /api/entitlement EntitlementResult discriminated union, Stripe event.type literals (post-T006 capture). \u00a7 5 Execution Order rebuilt with 8 RED-before-GREEN pairs. Task count unchanged at 52 (no splits needed; LD pre-paired). task_breakdown_style=tdd set in manifest. qa-report.md NOT written (minimal track + auto-lite)."
     }
   ],
   "implementation": {
@@ -272,6 +290,24 @@
       "raised_at": "2026-05-15T10:00:00Z",
       "resolved_at": "2026-05-15T10:00:00Z",
       "references": "scope_dial.ui_variants=skip; PRD-001 \u00a7 11; POC poc-v1-prd000/"
+    },
+    {
+      "stage": "task-breakdown",
+      "severity": "info",
+      "kind": "assumption",
+      "item": "Tranche B RED-test fixtures (T012/T013/T014/T016/T018/T020/T022\u2013T025) are written against the Stripe API documentation shape (https://stripe.com/docs/api) BEFORE the T006 `.d.ts` capture lands. Per progressive-fixture-capture preference, the assumption is that fixture deltas (if any) get fixed inline when T006 captures the real `.d.ts` types post-install. Watch for: parameter renames, optional-vs-required mismatches, and discriminated-union event shapes. Fixture provenance note is added inline in \u00a7 9.3 of the task breakdown.",
+      "raised_at": "2026-05-15T11:00:00Z",
+      "resolved_at": null,
+      "references": "task-breakdown \u00a7 9.3 + \u00a7 10 + T006; rule 40-sdk-contracts; feedback_assumed_shapes_progressive_capture.md"
+    },
+    {
+      "stage": "task-breakdown",
+      "severity": "info",
+      "kind": "concern",
+      "item": "Webhook handler ((\u22645s latency) is asserted as an ACCEPTANCE/performance test, not a deterministic RED unit test. The unit suite covers handler correctness (signature, idempotency, dispatch) but does not gate the latency NFR-3. Latency check happens at Tranche D operator gate with the real Stripe Dashboard webhook test. If handler hits >5s under live load, Stripe will retry \u2192 idempotency must hold (this IS unit-tested via T042 duplicate event.id scenario).",
+      "raised_at": "2026-05-15T11:00:00Z",
+      "resolved_at": null,
+      "references": "task-breakdown \u00a7 9.8 latency caveat + Tranche D gate T044/T045; PRD-001 NFR-3"
     }
   ],
   "notes": [
