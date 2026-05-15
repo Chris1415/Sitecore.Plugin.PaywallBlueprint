@@ -2,10 +2,10 @@
   "schema_version": 6,
   "run_id": "20260515T081454Z",
   "created_at": "2026-05-15T08:14:54Z",
-  "updated_at": "2026-05-15T11:00:00Z",
+  "updated_at": "2026-05-15T13:00:00Z",
   "product_slug": "paywall-blueprint",
   "product_root": "products/paywall-blueprint",
-  "status": "qa_ready",
+  "status": "implementing",
   "prd_input_mode": "prompt_only",
   "platform_target": "marketplace",
   "task_breakdown_style": "tdd",
@@ -142,6 +142,15 @@
       "outcome": "completed",
       "error": null,
       "notes": "Task breakdown enriched in place; 430\u2192805 lines. \u00a7 9 TDD contract (mandate + 6 exclusion categories + fixture provenance + iframe scope boundary + a11y + contrast waiver + host-frame smoke + latency caveat). \u00a7 10 added with 34 named RED scenarios across 12 test tasks. \u00a7 4b strengthened to 38 Task-ID-traceable rows (16 MUST-HAVE). \u00a7 4c extensions: /api/checkout response shape, /api/entitlement EntitlementResult discriminated union, Stripe event.type literals (post-T006 capture). \u00a7 5 Execution Order rebuilt with 8 RED-before-GREEN pairs. Task count unchanged at 52 (no splits needed; LD pre-paired). task_breakdown_style=tdd set in manifest. qa-report.md NOT written (minimal track + auto-lite)."
+    },
+    {
+      "stage": "implemented_tranche_a",
+      "agent": "08-developer",
+      "entered_at": "2026-05-15T11:15:00Z",
+      "exited_at": "2026-05-15T13:00:00Z",
+      "outcome": "completed",
+      "error": null,
+      "notes": "Tranche A T002\u2013T007 complete. T002 baseline: 74 tests pass, build green, lint clean (7 pre-existing warnings). T003 scaffold migration applied via `npx shadcn@latest add quickstart-with-full-stack-xmc.json`; quickstart shipped stray files at wrong paths (`site/src/app/`, `site/src/components/examples/`, `site/src/next.config.ts`) which were merged-or-deleted with care; useful CSP `frame-ancestors` headers merged into existing next.config.mjs alongside PNA headers. Protected files untouched. T004 post-migration: 74/74 tests pass, build green. T005 stripe@22.1.1 installed (architect's 17.x preview outdated). T006 .d.ts paths captured \u2014 MAJOR LAYOUT DIVERGENCE: stripe@22.x has no `types/` subdir; types live at `cjs/resources/`. Event type names corrected (e.g., `CheckoutSessionCompletedEvent` not `Stripe.Checkout.SessionCompletedEvent`); event.type discriminant strings unchanged. T007 .env.example appended 4 Stripe vars. Validation gate: lint+build+git-status all green. Commits: 08b5dcc/7626096/4c3bb93/fdea0ff/0945213. T001 (Stripe Tax decision) deferred to Tranche C smoke (T040). T008 verified complete (3 Stripe keys in .env.local from pre-flight; webhook secret deferred to T029 per spec). T009 (real-tenant iframe smoke) STOPS here per operator scope."
     }
   ],
   "implementation": {
@@ -149,9 +158,10 @@
     "target_directory": "site",
     "branch_name": "prd-001",
     "remote_url": "https://github.com/Chris1415/Sitecore.Plugin.PaywallBlueprint.git",
-    "status": "not_started",
+    "status": "in_progress",
     "current_tranche": "A",
-    "resumed_from_stage": null
+    "resumed_from_stage": null,
+    "runbook": "products/paywall-blueprint/project-planning/plans/implementation-runbook-20260515T081454Z.md"
   },
   "smoke_outcomes": {},
   "operator_attention": [
@@ -308,6 +318,24 @@
       "raised_at": "2026-05-15T11:00:00Z",
       "resolved_at": null,
       "references": "task-breakdown \u00a7 9.8 latency caveat + Tranche D gate T044/T045; PRD-001 NFR-3"
+    },
+    {
+      "stage": "implement",
+      "severity": "info",
+      "kind": "resolved",
+      "item": "T006 SDK contract capture (rule 40-sdk-contracts) RESOLVED \u2014 deferred citation from /architect is now real. stripe@22.1.1 has MAJOR LAYOUT DIVERGENCE from the architect's preview: no `types/` subdir; types live at `node_modules/stripe/cjs/resources/`. Event type names corrected in \u00a7 4c-6: `CheckoutSessionCompletedEvent` (not `Stripe.Checkout.SessionCompletedEvent`), `CheckoutSessionAsyncPaymentSucceededEvent` / `Failed`, `CustomerSubscriptionUpdatedEvent` / `DeletedEvent`. `event.type` discriminant strings unchanged (`'checkout.session.completed'` etc.). Tranche B RED test fixtures (T012/T014/T022/T023/T024/T025 + T042) must use the CORRECTED type names from \u00a7 4c-6 now \u2014 not the architect preview.",
+      "raised_at": "2026-05-15T11:15:00Z",
+      "resolved_at": "2026-05-15T13:00:00Z",
+      "references": "task-breakdown \u00a7 4c-6 (updated post-T006); commit fdea0ff"
+    },
+    {
+      "stage": "implement",
+      "severity": "info",
+      "kind": "concern",
+      "item": "T003 scaffold quickstart shipped stray files at wrong paths (`site/src/app/`, `site/src/components/examples/`, `site/src/next.config.ts`, `site/src/pages.tsx`, `site/src/components/providers/auth.tsx` + `marketplace.tsx`). The Developer handled this correctly: useful CSP `frame-ancestors` headers merged into existing `next.config.mjs` alongside PNA headers; stray files deleted; existing PRD-000 components left untouched. The quickstart layout discrepancy may recur on future shadcn-registry-driven migrations \u2014 worth surfacing to the `sitecore:setup-marketplace-full-stack` skill maintainers. The auth.tsx provider stays untouched (Mode A iframe app does NOT need Auth0 PKCE) and `@auth0/auth0-react` is now a transitive dep (acceptable; not bundled into client unless imported).",
+      "raised_at": "2026-05-15T13:00:00Z",
+      "resolved_at": null,
+      "references": "T003 commit 08b5dcc; sitecore:setup-marketplace-full-stack quickstart"
     }
   ],
   "notes": [
