@@ -1,5 +1,5 @@
 /**
- * T038 RED — /paywall-return client component tests.
+ * T038 RED → GREEN — /paywall-return client component tests.
  *
  * Two tests:
  *   T038a — opener present: window.opener.postMessage called with correct payload;
@@ -10,9 +10,12 @@
  *
  * ADR-0014 (revised): postMessage is best-effort sugar; opener is frequently null
  * from sandboxed iframes. The fallthrough static message is the resilient path.
+ *
+ * Note on fake timers + React: useRealTimers for waitFor/act; manually advance
+ * the 500ms setTimeout for the close assertion.
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PaywallReturnClient } from './PaywallReturnClient';
 
@@ -21,14 +24,12 @@ import { PaywallReturnClient } from './PaywallReturnClient';
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
-  vi.useFakeTimers();
-  // Clear sessionStorage between tests
   sessionStorage.clear();
 });
 
 afterEach(() => {
-  vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 // ---------------------------------------------------------------------------
@@ -37,6 +38,8 @@ afterEach(() => {
 
 describe('PaywallReturnClient — T038a — opener present', () => {
   it('calls window.opener.postMessage with correct payload and queues window.close', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
     const postMessageMock = vi.fn();
     const closeMock = vi.fn();
 
@@ -53,12 +56,12 @@ describe('PaywallReturnClient — T038a — opener present', () => {
       configurable: true,
     });
 
-    render(<PaywallReturnClient sessionId="cs_test_123" />);
-
-    // Wait for the useEffect to fire (jsdom renders synchronously but effects are async)
-    await waitFor(() => {
-      expect(postMessageMock).toHaveBeenCalled();
+    await act(async () => {
+      render(<PaywallReturnClient sessionId="cs_test_123" />);
     });
+
+    // postMessage fires synchronously in useEffect
+    expect(postMessageMock).toHaveBeenCalledTimes(1);
 
     // Assert postMessage called with correct payload + an origin string
     const [payload, origin] = postMessageMock.mock.calls[0];
@@ -72,7 +75,9 @@ describe('PaywallReturnClient — T038a — opener present', () => {
     expect(Number(stored)).toBeGreaterThan(0);
 
     // Advance 500ms to trigger the setTimeout → window.close
-    await vi.advanceTimersByTimeAsync(500);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
     expect(closeMock).toHaveBeenCalled();
   });
 });
@@ -90,22 +95,14 @@ describe('PaywallReturnClient — T038b — opener null', () => {
       configurable: true,
     });
 
-    // Spy on any window.postMessage attempt via opener — should not be called
-    const postMessageMock = vi.fn();
-    // (No opener to call postMessage on; we verify by checking no error is thrown
-    //  and the fallthrough text renders.)
-
-    render(<PaywallReturnClient sessionId="cs_test_456" />);
-
-    // Wait for the fallthrough text to render
-    await waitFor(() => {
-      expect(
-        screen.getByText(/you can close this tab/i)
-      ).toBeTruthy();
+    await act(async () => {
+      render(<PaywallReturnClient sessionId="cs_test_456" />);
     });
 
-    // postMessage must NOT have been called
-    expect(postMessageMock).not.toHaveBeenCalled();
+    // Fallthrough text must render immediately (setFallthrough(true) in useEffect)
+    expect(
+      screen.getByText(/you can close this tab/i)
+    ).toBeTruthy();
 
     // sessionStorage MUST still be written (best-effort signal)
     const stored = sessionStorage.getItem('paywall:lastCheckoutCompleted');
