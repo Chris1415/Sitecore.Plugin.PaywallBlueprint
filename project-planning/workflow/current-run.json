@@ -2,7 +2,7 @@
   "schema_version": 6,
   "run_id": "20260515T081454Z",
   "created_at": "2026-05-15T08:14:54Z",
-  "updated_at": "2026-05-17T01:00:00Z",
+  "updated_at": "2026-05-17T08:00:00Z",
   "product_slug": "paywall-blueprint",
   "product_root": "products/paywall-blueprint",
   "status": "implementing",
@@ -187,6 +187,15 @@
       "outcome": "completed",
       "error": null,
       "notes": "Tranche C T030\u2013T039 complete. 8 commits. RED\u2192GREEN transitions confirmed for both pairs (T031\u2013T034\u2192T030 hook; T038\u2192T037 paywall-return). 6 new tests; total 99/99 PASS. Existing-test ripples: NoSubscriptionState.test.tsx + SeatsFullState.test.tsx + PaywallGate.test.tsx each got a useEntitlement mock added (dialog now consumes the hook). Gates green: lint (0 errors, 10 pre-existing warnings), typecheck, test, build (/paywall-return listed as route), test:env-leak. Working tree clean. Commits: ffae308 (T031-T034 RED) 96a50f4 (T030) c4c5578 (T035) 9350f5e (T036) 0d0ae80 (T038 RED) 428ed54 (T037) 1d90de3 (lint+typecheck fixes) 6b2fcd4 (T039). Divergence: atomicity invariant in useEntitlement uses an `outcomeSettledRef` LATCH + imperative resolveSuccess/resolveTimeout callbacks (not the originally-spec'd `setOutcome(prev => prev ?? ...)` state pattern) \u2014 forced by `eslint-plugin-react-hooks` v7 React Compiler analysis. Functionally equivalent; first-signal-wins preserved. T040 (operator real-money smoke with 4242 4242 4242 4242) is the G1 gate \u2014 STOPS here."
+    },
+    {
+      "stage": "tranche_c_smoke_passed",
+      "agent": "operator",
+      "entered_at": "2026-05-17T01:00:00Z",
+      "exited_at": "2026-05-17T08:00:00Z",
+      "outcome": "pass",
+      "error": null,
+      "notes": "**G1 SUCCESS CRITERION MET.** Operator T040 real-money smoke PASS \u2014 paid \u20ac0.99 with 4242 4242 4242 4242 inside the Cloud Portal iframe; Stripe Checkout opened in new tab; address field captured; Stripe redirected to /paywall-return; iframe auto-refreshed to AllowedState welcome card. Two Stripe-API traps surfaced and fixed mid-smoke: (1) `customer_tax_location_invalid` \u2192 fixed by adding `customer_update: { address: 'auto', name: 'auto' }` to SessionCreateParams (commit 933978d); (2) idempotency-key params drift after the first fix \u2192 versioned the key as `${tenantId}:${CHECKOUT_PARAMS_VERSION}` starting at v2 (commit 3dab67e). Both fixes captured to memory for future Marketplace apps. Error-translation catch-all improved to surface real Stripe code+message in dialog so future unmapped errors are self-diagnosing. Ready for Tranche D (T041\u2013T045 forward-compat webhook handlers + real Stripe Dashboard endpoint; G2 gate at T045)."
     }
   ],
   "implementation": {
@@ -194,8 +203,8 @@
     "target_directory": "site",
     "branch_name": "prd-001",
     "remote_url": "https://github.com/Chris1415/Sitecore.Plugin.PaywallBlueprint.git",
-    "status": "tranche_b_passed",
-    "current_tranche": "C",
+    "status": "tranche_c_passed_G1_met",
+    "current_tranche": "D",
     "resumed_from_stage": null,
     "runbook": "products/paywall-blueprint/project-planning/plans/implementation-runbook-20260515T081454Z.md"
   },
@@ -209,6 +218,11 @@
       "outcome": "pass",
       "verified_at": "2026-05-16T23:15:00Z",
       "notes": "Operator T029 gate verified: `stripe trigger checkout.session.completed --add checkout_session:metadata.tenant_id=<id>` delivers 200 to /api/webhooks/stripe; tenants row upserts (status=active, plan=premium, stripe_customer_id populated); idempotency holds on resend (200 silent, no duplicate row). Initial silent failure diagnosed: stripe listen --forward-to localhost:3000/... defaults to http://, but the dev server is on https:// (--experimental-https). Fix: stripe listen --forward-to https://localhost:3000/api/webhooks/stripe --skip-verify (mkcert is self-signed). Each listen session mints a fresh whsec_* signing secret that must be copied to .env.local + dev server restarted. Memory saved at reference_stripe_listen_https_localhost.md."
+    },
+    "tranche_c": {
+      "outcome": "pass",
+      "verified_at": "2026-05-17T08:00:00Z",
+      "notes": "**G1 SUCCESS CRITERION MET** \u2014 T040 real-money smoke PASS. Operator paid \u20ac0.99 with 4242 4242 4242 4242 inside the Cloud Portal iframe; Stripe Checkout opened in a new tab; address captured (customer_update.address: 'auto'); Stripe redirected to /paywall-return; iframe auto-refreshed to AllowedState welcome card. Two Stripe-API traps surfaced and fixed inline: (1) `customer_tax_location_invalid` \u2014 added `customer_update: { address: 'auto', name: 'auto' }` to SessionCreateParams (memory: reference_stripe_automatic_tax_customer_update.md); (2) idempotency-key params drift after fix (1) \u2014 introduced versioned key `${tenantId}:${CHECKOUT_PARAMS_VERSION}` starting at v2 (memory: reference_stripe_idempotency_key_params_drift.md). Error-translation table improved to surface real Stripe `code` + `message` in dialog response so adopters don't need to scrape server console for diagnostics. Commits: 933978d (customer_update fix + improved translation table), 3dab67e (versioned idempotency key)."
     }
   },
   "operator_attention": [
