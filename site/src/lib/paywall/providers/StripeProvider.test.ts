@@ -26,22 +26,25 @@ const mockCheckoutSessionsCreate = vi.fn();
 const mockWebhooksConstructEvent = vi.fn();
 
 vi.mock('stripe', () => {
-  const MockStripe = vi.fn().mockImplementation(() => ({
-    customers: {
-      list: mockCustomersList,
-      create: mockCustomersCreate,
-      update: mockCustomersUpdate,
-      retrieve: mockCustomersRetrieve,
-    },
-    checkout: {
-      sessions: {
-        create: mockCheckoutSessionsCreate,
+  // Create a mock constructor that returns a mock instance when called with `new`
+  function MockStripe() {
+    return {
+      customers: {
+        list: mockCustomersList,
+        create: mockCustomersCreate,
+        update: mockCustomersUpdate,
+        retrieve: mockCustomersRetrieve,
       },
-    },
-    webhooks: {
-      constructEvent: mockWebhooksConstructEvent,
-    },
-  }));
+      checkout: {
+        sessions: {
+          create: mockCheckoutSessionsCreate,
+        },
+      },
+      webhooks: {
+        constructEvent: mockWebhooksConstructEvent,
+      },
+    };
+  }
   return { default: MockStripe };
 });
 
@@ -199,11 +202,13 @@ describe('T012 — StripeProvider orphan recovery (generateCheckoutUrl)', () => 
       }),
     );
     // console.warn must include the discarded ID
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[PaywallBlueprint]'),
-      expect.anything(),
-      expect.stringContaining('cus_older'),
-    );
+    // Actual call: warn(message, joinedString, discardedArray)
+    // The first arg contains the prefix and the picked customer ID
+    const warnCall = warnSpy.mock.calls[0];
+    expect(warnCall[0]).toContain('[PaywallBlueprint]');
+    // discarded customer ID must appear somewhere in the warn output
+    const allArgs = warnCall.map((a) => JSON.stringify(a)).join(' ');
+    expect(allArgs).toContain('cus_older');
 
     warnSpy.mockRestore();
   });
