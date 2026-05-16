@@ -59,8 +59,8 @@ function makeEntitlementResponse(status: string) {
 
 beforeEach(() => {
   vi.useFakeTimers();
-  mockUseAppContext.mockReturnValue({ marketplaceAppTenantId: 'tenant-test' } as ReturnType<typeof useAppContext>);
-  mockUseHostUser.mockReturnValue({ email: 'test@example.com' } as ReturnType<typeof useHostUser>);
+  mockUseAppContext.mockReturnValue({ marketplaceAppTenantId: 'tenant-test' } as unknown as ReturnType<typeof useAppContext>);
+  mockUseHostUser.mockReturnValue({ email: 'test@example.com' } as unknown as ReturnType<typeof useHostUser>);
   vi.spyOn(window, 'open').mockReturnValue(null);
 });
 

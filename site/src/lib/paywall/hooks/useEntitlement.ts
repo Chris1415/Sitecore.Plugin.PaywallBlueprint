@@ -5,11 +5,11 @@
  * sugar that triggers an immediate poll but does NOT stop polling on its own.
  * Only status === 'allowed' from a poll OR the 30s timeout stops the state machine.
  *
- * Atomicity invariant: setOutcome(prev => prev ?? signal) — first signal wins.
- * Subsequent signals (e.g. timeout firing after postMessage success) are no-ops.
+ * Atomicity invariant: outcomeRef.current is a one-way latch. The first writer
+ * (poll success or timeout) locks it — subsequent signals are no-ops.
  *
- * All cleanup (clearInterval + clearTimeout + removeEventListener) fires in a single
- * useEffect cleanup callback on first non-null outcome OR on unmount.
+ * All cleanup (clearInterval + clearTimeout + removeEventListener) fires from
+ * stopPolling(), which is called on first outcome resolution OR on unmount.
  *
  * Must be used INSIDE the /full-page subtree (inside MarketplaceProvider) per ADR-0008.
  * source: @/components/providers/marketplace → useAppContext, useHostUser
@@ -47,9 +47,6 @@ const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 30000;
 const REFRESH_MESSAGE_TYPE = 'paywall:refresh';
 
-// Internal outcome shape — not exposed to consumers.
-type Outcome = { kind: 'success' } | { kind: 'timeout' } | null;
-
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
@@ -72,8 +69,14 @@ export function useEntitlement(): UseEntitlementReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<UseEntitlementReturn['error']>(null);
 
-  // Internal outcome — consumers never see this; they see entitlement + error.
-  const [outcome, setOutcome] = useState<Outcome>(null);
+  // -------------------------------------------------------------------------
+  // Atomicity latch: outcomeRef.current is a one-way latch.
+  // The first writer (poll success or timeout) sets it to true; subsequent
+  // calls from the other path are no-ops. Implemented with a ref (not state)
+  // to avoid triggering cascading renders — the consumer-facing state
+  // (entitlement / error) is set atomically by the winning path.
+  // -------------------------------------------------------------------------
+  const outcomeSettledRef = useRef(false);
 
   // Refs to active timers and the message handler so cleanup is always correct.
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -99,47 +102,55 @@ export function useEntitlement(): UseEntitlementReturn {
   }, []);
 
   // -------------------------------------------------------------------------
-  // pollOnce — single entitlement check; sets entitlement state; resolves
-  //            outcome to 'success' atomically if status === 'allowed'.
+  // Unmount cleanup — unconditional
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    return () => stopPolling();
+  }, [stopPolling]);
+
+  // -------------------------------------------------------------------------
+  // resolveSuccess — called when a poll returns 'allowed'. Atomicity enforced.
+  // -------------------------------------------------------------------------
+  const resolveSuccess = useCallback(
+    (result: EntitlementResult) => {
+      if (outcomeSettledRef.current) return; // first-signal-wins
+      outcomeSettledRef.current = true;
+      setEntitlement(result);
+      stopPolling();
+    },
+    [stopPolling]
+  );
+
+  // -------------------------------------------------------------------------
+  // resolveTimeout — called when the 30s cap fires. Atomicity enforced.
+  // -------------------------------------------------------------------------
+  const resolveTimeout = useCallback(() => {
+    if (outcomeSettledRef.current) return; // first-signal-wins
+    outcomeSettledRef.current = true;
+    setError({ kind: 'polling_timeout' });
+    stopPolling();
+  }, [stopPolling]);
+
+  // -------------------------------------------------------------------------
+  // pollOnce — single entitlement check. Calls resolveSuccess on 'allowed'.
   // -------------------------------------------------------------------------
   const pollOnce = useCallback(async () => {
-    if (!tenantId) return;
+    if (!tenantId || outcomeSettledRef.current) return;
     try {
       const res = await fetch(
         `/api/entitlement?tenantId=${encodeURIComponent(tenantId)}`
       );
       if (!res.ok) return;
       const body = (await res.json()) as EntitlementResult;
+      // Always update the last-known entitlement for consumers.
       setEntitlement(body);
       if (body.status === 'allowed') {
-        // Atomicity: first signal wins — subsequent calls are no-ops.
-        setOutcome((prev) => prev ?? { kind: 'success' });
+        resolveSuccess(body);
       }
     } catch {
       // Network blip — let the next interval poll retry.
     }
-  }, [tenantId]);
-
-  // -------------------------------------------------------------------------
-  // Outcome effect — fires once when outcome becomes non-null.
-  // Tears down all polling infrastructure and surfaces the outcome to the caller.
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    if (outcome !== null) {
-      stopPolling();
-      if (outcome.kind === 'timeout') {
-        setError({ kind: 'polling_timeout' });
-      }
-      // 'success' outcome: entitlement was already updated by pollOnce → gate re-renders.
-    }
-  }, [outcome, stopPolling]);
-
-  // -------------------------------------------------------------------------
-  // Unmount cleanup — unconditional
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    return () => stopPolling();
-  }, [stopPolling]);
+  }, [tenantId, resolveSuccess]);
 
   // -------------------------------------------------------------------------
   // triggerCheckout — the main public API
@@ -162,7 +173,8 @@ export function useEntitlement(): UseEntitlementReturn {
 
     setIsLoading(true);
     setError(null);
-    setOutcome(null);
+    // Reset the atomicity latch for a fresh checkout attempt.
+    outcomeSettledRef.current = false;
 
     try {
       const res = await fetch('/api/checkout', {
@@ -199,7 +211,7 @@ export function useEntitlement(): UseEntitlementReturn {
       // -----------------------------------------------------------------------
       // Start the success-detection state machine:
       //   - setInterval: poll every 3s (load-bearing path)
-      //   - setTimeout: cap at 30s; fire 'timeout' outcome if no 'allowed' yet
+      //   - setTimeout: cap at 30s; call resolveTimeout if no 'allowed' yet
       //   - addEventListener 'message': best-effort fastest path — triggers an
       //     immediate poll on 'paywall:refresh'; does NOT stop the interval.
       // -----------------------------------------------------------------------
@@ -211,7 +223,7 @@ export function useEntitlement(): UseEntitlementReturn {
 
       // Start 30s timeout cap
       timeoutRef.current = setTimeout(() => {
-        setOutcome((prev) => prev ?? { kind: 'timeout' });
+        resolveTimeout();
       }, POLL_TIMEOUT_MS);
 
       // Register postMessage listener
@@ -232,7 +244,7 @@ export function useEntitlement(): UseEntitlementReturn {
       });
       setIsLoading(false);
     }
-  }, [tenantId, userEmail, pollOnce]);
+  }, [tenantId, userEmail, pollOnce, resolveTimeout]);
 
   return { entitlement, isLoading, error, triggerCheckout };
 }
