@@ -1,4 +1,6 @@
-# Paywall Blueprint
+# <img src="https://hachweb.wordpress.com/wp-content/uploads/2025/08/2022-05-03-09_10_13-receipt-stickerapp-removebg-preview.png" alt="Hahn-Solo logo" height="40" align="center" /> Paywall Blueprint
+
+**Author:** [Christian Hahn](https://www.linkedin.com/in/christian-hahn-solo/) — _Technical Product Manager DevEx & SDKs @ Sitecore_
 
 The first publicly available worked example of monetizing a Sitecore Marketplace App.
 
