@@ -12,26 +12,23 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock StripeProvider to isolate route logic
+// Use vi.hoisted to create the mock fn before vi.mock hoisting runs
+const { mockGenerateCheckoutUrl } = vi.hoisted(() => ({
+  mockGenerateCheckoutUrl: vi.fn(),
+}));
+
+// Mock StripeProvider — use function constructor so `new StripeProvider()` works
 vi.mock('@/src/lib/paywall/providers/StripeProvider', () => {
-  return {
-    StripeProvider: vi.fn().mockImplementation(() => ({
-      generateCheckoutUrl: vi.fn(),
-    })),
-  };
+  function MockStripeProvider() {
+    return { generateCheckoutUrl: mockGenerateCheckoutUrl };
+  }
+  return { StripeProvider: MockStripeProvider };
 });
 
-import { StripeProvider } from '@/src/lib/paywall/providers/StripeProvider';
 import { POST } from './route';
-
-const mockGenerateCheckoutUrl = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
-  // Set up the mock to return a mock instance with generateCheckoutUrl
-  (StripeProvider as ReturnType<typeof vi.fn>).mockImplementation(() => ({
-    generateCheckoutUrl: mockGenerateCheckoutUrl,
-  }));
   // Set required env vars
   process.env.STRIPE_SECRET_KEY = 'sk_test_fake';
   process.env.STRIPE_PRICE_ID = 'price_test_fake';
