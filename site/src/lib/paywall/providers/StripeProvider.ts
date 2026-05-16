@@ -22,6 +22,29 @@ import { createClient } from '@supabase/supabase-js';
 /** Scope tag that scopes Stripe Customer lookup to this specific app (ADR-0015) */
 const APP_SLUG = 'paywall-blueprint';
 
+/**
+ * Suffix included in the Stripe idempotency key so it bumps when params change.
+ *
+ * Stripe idempotency keys cache the FIRST request's params; subsequent requests
+ * with the SAME key but DIFFERENT params are rejected with:
+ *   "Keys for idempotent requests can only be used with the same parameters
+ *    they were first used with."
+ * Keys auto-expire after 24h, but during dev iteration a stale cache hit will
+ * block you for that window.
+ *
+ * Bump this version constant whenever you change the SessionCreateParams shape
+ * (added/removed/renamed fields, automatic_tax flip, customer_update change,
+ * etc.). The idempotency key becomes `${tenantId}:${CHECKOUT_PARAMS_VERSION}`,
+ * so a bump produces a fresh key for every tenant — Stripe re-runs the request
+ * with the new params instead of returning the cached error.
+ *
+ * History:
+ *   v1 — initial T011 shape (no customer_update; failed automatic_tax with
+ *        customer_tax_location_invalid against real tenants)
+ *   v2 — added customer_update: { address: 'auto', name: 'auto' }
+ */
+const CHECKOUT_PARAMS_VERSION = 'v2';
+
 export class StripeProvider {
   private readonly stripe: Stripe;
 
@@ -76,7 +99,7 @@ export class StripeProvider {
         customer: customer.id,
         metadata: { tenant_id: tenantId },
       },
-      { idempotencyKey: tenantId },
+      { idempotencyKey: `${tenantId}:${CHECKOUT_PARAMS_VERSION}` },
     );
 
     return session.url!;
