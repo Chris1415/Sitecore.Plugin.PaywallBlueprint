@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed:state": "tsx scripts/seed-state.ts",
-    "test:dce": "bash scripts/test-dce.sh"
+    "test:dce": "bash scripts/test-dce.sh",
+    "test:env-leak": "bash scripts/test-stripe-env-leak.sh"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.16.2",
