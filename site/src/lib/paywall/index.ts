@@ -41,6 +41,7 @@ export type {
 } from './types';
 
 // ---------------------------------------------------------------------------
-// Hooks — useEntitlement re-export added in T039 (Tranche C)
+// Hooks — T039: useEntitlement re-export (public API barrel)
 // ---------------------------------------------------------------------------
-// export { useEntitlement } from './hooks/useEntitlement';
+export { useEntitlement } from './hooks/useEntitlement';
+export type { UseEntitlementReturn } from './hooks/useEntitlement';
