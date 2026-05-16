@@ -23,6 +23,7 @@ const nextConfig = {
       'https://marketplace-app.sitecorecloud.io',
       'https://pages.sitecorecloud.io',
       'https://xmapps.sitecorecloud.io',
+      "https://app.sitecorecloud.io"
     ];
 
     return [

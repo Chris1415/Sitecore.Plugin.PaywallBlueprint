@@ -22,6 +22,7 @@ import Topbar from "@/components/bloks/top-bar";
 import { Separator } from "@/components/ui/separator";
 import { FreeSection } from "@/components/free-section";
 import { GatedSectionWithDevPicker } from "@/components/gated-section-with-dev-picker";
+import { TenantIdBadge } from "@/components/tenant-id-badge";
 import { DemoModeBanner } from "@/src/lib/paywall/DemoModeBanner";
 import {
   isValidPreviewState,
@@ -59,6 +60,10 @@ export default async function FullPage({ searchParams }: PageProps) {
 
       {/* Page shell — centered, max ~880px wide per UI spec § 3.1 */}
       <main className="flex-1 max-w-[880px] mx-auto w-full px-6 pt-6 pb-8 flex flex-col gap-6">
+        {/* Developer/operator aid: live tenantId for the seed CLI. */}
+        {/* Renders only when SDK context has resolved; safe in prod (tenantId is in iframe URL anyway). */}
+        <TenantIdBadge />
+
         {/* Free section — OUTSIDE ErrorBoundary; always renders even when gate throws (NFR-6) */}
         <FreeSection />
 
