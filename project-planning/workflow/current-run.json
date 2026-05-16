@@ -2,7 +2,7 @@
   "schema_version": 6,
   "run_id": "20260515T081454Z",
   "created_at": "2026-05-15T08:14:54Z",
-  "updated_at": "2026-05-15T13:00:00Z",
+  "updated_at": "2026-05-16T20:55:00Z",
   "product_slug": "paywall-blueprint",
   "product_root": "products/paywall-blueprint",
   "status": "implementing",
@@ -151,6 +151,15 @@
       "outcome": "completed",
       "error": null,
       "notes": "Tranche A T002\u2013T007 complete. T002 baseline: 74 tests pass, build green, lint clean (7 pre-existing warnings). T003 scaffold migration applied via `npx shadcn@latest add quickstart-with-full-stack-xmc.json`; quickstart shipped stray files at wrong paths (`site/src/app/`, `site/src/components/examples/`, `site/src/next.config.ts`) which were merged-or-deleted with care; useful CSP `frame-ancestors` headers merged into existing next.config.mjs alongside PNA headers. Protected files untouched. T004 post-migration: 74/74 tests pass, build green. T005 stripe@22.1.1 installed (architect's 17.x preview outdated). T006 .d.ts paths captured \u2014 MAJOR LAYOUT DIVERGENCE: stripe@22.x has no `types/` subdir; types live at `cjs/resources/`. Event type names corrected (e.g., `CheckoutSessionCompletedEvent` not `Stripe.Checkout.SessionCompletedEvent`); event.type discriminant strings unchanged. T007 .env.example appended 4 Stripe vars. Validation gate: lint+build+git-status all green. Commits: 08b5dcc/7626096/4c3bb93/fdea0ff/0945213. T001 (Stripe Tax decision) deferred to Tranche C smoke (T040). T008 verified complete (3 Stripe keys in .env.local from pre-flight; webhook secret deferred to T029 per spec). T009 (real-tenant iframe smoke) STOPS here per operator scope."
+    },
+    {
+      "stage": "tranche_a_smoke_passed",
+      "agent": "operator",
+      "entered_at": "2026-05-16T20:30:00Z",
+      "exited_at": "2026-05-16T20:55:00Z",
+      "outcome": "pass",
+      "error": null,
+      "notes": "T009 real-tenant iframe smoke PASS. Initial blank iframe diagnosed as CSP frame-ancestors allow-list missing https://app.sitecorecloud.io (canonical Cloud Portal origin omitted by sitecore:setup-marketplace-full-stack quickstart). Operator added origin; iframe loaded /full-page identically to PRD-000. Out-of-band additions during session: Hahn-Solo branding (logo + author + IntroPage at /), TenantIdBadge on /full-page for seed CLI workflow, --experimental-https dev flag, route restructure (MarketplaceProvider moved to app/full-page/layout.tsx so / is unblocked). PR #2 (DRAFT) open for Vercel preview. Ready for Tranche B."
     }
   ],
   "implementation": {
@@ -158,12 +167,18 @@
     "target_directory": "site",
     "branch_name": "prd-001",
     "remote_url": "https://github.com/Chris1415/Sitecore.Plugin.PaywallBlueprint.git",
-    "status": "in_progress",
-    "current_tranche": "A",
+    "status": "tranche_a_passed",
+    "current_tranche": "B",
     "resumed_from_stage": null,
     "runbook": "products/paywall-blueprint/project-planning/plans/implementation-runbook-20260515T081454Z.md"
   },
-  "smoke_outcomes": {},
+  "smoke_outcomes": {
+    "tranche_a": {
+      "outcome": "pass",
+      "verified_at": "2026-05-16T20:50:00Z",
+      "notes": "Operator T009 real-tenant iframe smoke verified. Initial blank-iframe diagnosed as CSP frame-ancestors allow-list missing https://app.sitecorecloud.io \u2014 canonical Cloud Portal origin (sitecore:setup-marketplace-full-stack quickstart omits it). Operator added the origin to next.config.mjs; iframe then loaded /full-page identically to PRD-000. Out-of-band T009-session additions: branding (Hahn-Solo logo + author + public IntroPage at /), TenantIdBadge on /full-page for seed-CLI workflow. PR #2 open (DRAFT) for Vercel preview."
+    }
+  },
   "operator_attention": [
     {
       "stage": "create-prd",
@@ -336,6 +351,24 @@
       "raised_at": "2026-05-15T13:00:00Z",
       "resolved_at": null,
       "references": "T003 commit 08b5dcc; sitecore:setup-marketplace-full-stack quickstart"
+    },
+    {
+      "stage": "implement",
+      "severity": "info",
+      "kind": "resolved",
+      "item": "T009 real-tenant iframe smoke initially loaded BLANK with CSP refused-to-display. Root cause: `sitecore:setup-marketplace-full-stack` quickstart-shipped `frame-ancestors` allow-list in `next.config.mjs` OMITS `https://app.sitecorecloud.io` \u2014 the canonical Cloud Portal origin that actually embeds the iframe. Operator added the origin; iframe then loaded clean. Memory saved at `reference_marketplace_iframe_csp_origins.md`. Worth surfacing to skill maintainers as a one-line registry addition.",
+      "raised_at": "2026-05-16T20:30:00Z",
+      "resolved_at": "2026-05-16T20:50:00Z",
+      "references": "commit 01c67a3; sitecore:setup-marketplace-full-stack quickstart frame-ancestors"
+    },
+    {
+      "stage": "implement",
+      "severity": "info",
+      "kind": "decision",
+      "item": "Out-of-band additions during T009 session (not in PRD-001 task list; coherent with ERM branding conventions): (1) Hahn-Solo cap-logo + author line in README H1; (2) HahnSoloFooter bottom-right logo on every page; (3) Public IntroPage at `/` with route restructure \u2014 MarketplaceProvider moved from root layout to app/full-page/layout.tsx; (4) TenantIdBadge on /full-page showing live application.context.marketplaceAppTenantId for the seed CLI workflow. PR #2 (DRAFT) opened for Vercel preview.",
+      "raised_at": "2026-05-16T20:55:00Z",
+      "resolved_at": "2026-05-16T20:55:00Z",
+      "references": "commits 3033048 (branding+IntroPage), 01c67a3 (CSP fix + TenantIdBadge); PR https://github.com/Chris1415/Sitecore.Plugin.PaywallBlueprint/pull/2"
     }
   ],
   "notes": [
