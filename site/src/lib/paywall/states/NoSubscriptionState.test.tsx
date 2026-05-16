@@ -5,12 +5,26 @@
  * 2026-05-13 revision: CTA changed from external-link `<a href="https://example.com/buy">`
  * to a `<button>` that opens PaywallCheckoutDialog (operator decision — placeholder for
  * PRD-001 Stripe Checkout). CTA label "View plans" stays locked.
+ *
+ * T035 update (PRD-001): PaywallCheckoutDialog now uses useEntitlement internally.
+ * Mock useEntitlement to keep NoSubscriptionState tests focused on state copy + CTA behavior.
+ * Dialog now shows new PRD-001 copy: "Subscribe — €0.99 lifetime" primary button + "Cancel".
  */
 
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { NoSubscriptionState } from "./NoSubscriptionState";
+
+// Mock useEntitlement so dialog renders without needing MarketplaceProvider
+vi.mock("@/src/lib/paywall/hooks/useEntitlement", () => ({
+  useEntitlement: () => ({
+    entitlement: null,
+    isLoading: false,
+    error: null,
+    triggerCheckout: vi.fn(),
+  }),
+}));
 
 describe("NoSubscriptionState — locked copy + a11y (revised 2026-05-13)", () => {
   it('renders headline "Start your subscription" (verbatim)', () => {
@@ -40,7 +54,7 @@ describe("NoSubscriptionState — locked copy + a11y (revised 2026-05-13)", () =
     expect(button.getAttribute("aria-label")).toBe("View plans");
   });
 
-  it("clicking CTA opens the PaywallCheckoutDialog with the locked placeholder copy", async () => {
+  it("clicking CTA opens the PaywallCheckoutDialog with PRD-001 rewired copy", async () => {
     const user = userEvent.setup();
     render(<NoSubscriptionState />);
 
@@ -50,14 +64,18 @@ describe("NoSubscriptionState — locked copy + a11y (revised 2026-05-13)", () =
     const trigger = screen.getByRole("button", { name: /View plans/i });
     await user.click(trigger);
 
-    // Dialog opens and shows the placeholder title + body
+    // Dialog opens and shows the PRD-001 title + body + locked buttons
     expect(await screen.findByRole("dialog")).toBeTruthy();
     expect(screen.getByText("Unlock — €0.99 lifetime")).toBeTruthy();
     expect(
       screen.getByText(
-        /Unlimited seats. Lifetime access to the premium section. One-time €0.99 payment\./,
+        /One-time payment. Unlimited seats. Lifetime access to the premium section\./,
       ),
     ).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Got it" })).toBeTruthy();
+    // PRD-001 locked button copy
+    expect(screen.getByRole("button", { name: "Subscribe — €0.99 lifetime" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeTruthy();
+    // Old "Got it" placeholder is gone
+    expect(screen.queryByRole("button", { name: "Got it" })).toBeNull();
   });
 });

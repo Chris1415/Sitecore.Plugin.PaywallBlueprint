@@ -10,8 +10,18 @@
 
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { SeatsFullState } from "./SeatsFullState";
+
+// Mock useEntitlement so dialog renders without needing MarketplaceProvider (T035 update)
+vi.mock("@/src/lib/paywall/hooks/useEntitlement", () => ({
+  useEntitlement: () => ({
+    entitlement: null,
+    isLoading: false,
+    error: null,
+    triggerCheckout: vi.fn(),
+  }),
+}));
 
 describe("SeatsFullState — locked copy + counter + a11y (revised 2026-05-13)", () => {
   it('renders headline "All seats in use" (verbatim)', () => {
@@ -52,7 +62,7 @@ describe("SeatsFullState — locked copy + counter + a11y (revised 2026-05-13)",
     expect(buttons).toHaveLength(1);
   });
 
-  it("clicking CTA opens the PaywallCheckoutDialog with the locked placeholder copy", async () => {
+  it("clicking CTA opens the PaywallCheckoutDialog with PRD-001 rewired copy", async () => {
     const user = userEvent.setup();
     render(<SeatsFullState seatsTotal={5} />);
 
@@ -65,9 +75,12 @@ describe("SeatsFullState — locked copy + counter + a11y (revised 2026-05-13)",
     expect(screen.getByText("Unlock — €0.99 lifetime")).toBeTruthy();
     expect(
       screen.getByText(
-        /Unlimited seats. Lifetime access to the premium section. One-time €0.99 payment\./,
+        /One-time payment. Unlimited seats. Lifetime access to the premium section\./,
       ),
     ).toBeTruthy();
+    // PRD-001 locked button copy
+    expect(screen.getByRole("button", { name: "Subscribe — €0.99 lifetime" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeTruthy();
   });
 
   it("counter interpolates seatsTotal correctly for seatsTotal={3}", () => {
