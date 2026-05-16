@@ -47,6 +47,17 @@ export function translateStripeError(err: unknown): { message: string; status: n
       };
     }
 
+    // Customer lacks a tax-residency address. Should not fire in normal flow because
+    // StripeProvider.generateCheckoutUrl now sets customer_update.address: 'auto'.
+    // Kept as defense-in-depth for adopters who fork the provider and drop the param.
+    if (code === 'customer_tax_location_invalid') {
+      return {
+        message:
+          'Tax location could not be determined. Make sure the StripeProvider sets `customer_update.address: \'auto\'`, or disable `automatic_tax`.',
+        status: 503,
+      };
+    }
+
     // Price ID not found — check STRIPE_PRICE_ID in .env.local
     if (code === 'resource_missing') {
       return {
@@ -74,10 +85,18 @@ export function translateStripeError(err: unknown): { message: string; status: n
     }
   }
 
-  // Unknown / unclassified error — log full error for operator diagnostics
+  // Unknown / unclassified error — log full error for operator diagnostics AND
+  // surface the underlying Stripe message in the response so adopters don't need
+  // to scrape the server console to diagnose. This is critical for the OSS blueprint
+  // story: every error that reaches an adopter should tell them what went wrong.
   console.error('[PaywallBlueprint] unhandled Stripe error:', err);
+  const stripeMessage = isStripeErrorLike(err) && typeof err.message === 'string' ? err.message : '';
+  const stripeCode = isStripeErrorLike(err) && typeof err.code === 'string' ? err.code : '';
+  const detail = stripeCode || stripeMessage
+    ? ` (${stripeCode ? `code: ${stripeCode}` : ''}${stripeCode && stripeMessage ? ' — ' : ''}${stripeMessage})`
+    : '';
   return {
-    message: 'Payment service encountered an unexpected error. Retry in a moment.',
+    message: `Payment service error${detail}`,
     status: 503,
   };
 }

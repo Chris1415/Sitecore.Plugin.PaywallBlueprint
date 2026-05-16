@@ -60,11 +60,17 @@ export class StripeProvider {
     const customer = await this.findOrCreateStripeCustomer({ tenantId, userEmail });
 
     // source: node_modules/stripe/cjs/resources/Checkout/Sessions.d.ts → SessionCreateParams
+    // customer_update.address: 'auto' is REQUIRED when automatic_tax is enabled and the
+    // Customer record lacks a tax-residency address — Stripe captures the billing address
+    // the customer enters during Checkout and saves it back to the Customer record.
+    // Without it: StripeInvalidRequestError `customer_tax_location_invalid` (verified
+    // against real tenant 2026-05-17 during T040 smoke).
     const session = await this.stripe.checkout.sessions.create(
       {
         mode: 'payment',
         line_items: [{ price: this.priceId, quantity: 1 }],
         automatic_tax: { enabled: true },
+        customer_update: { address: 'auto', name: 'auto' },
         success_url: `${returnUrl}?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: returnUrl,
         customer: customer.id,
