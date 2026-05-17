@@ -2,7 +2,14 @@
 
 ## Status
 
-Accepted
+**Deferred (2026-05-18).** Originally Accepted as part of PRD-002 spec. After operator iteration on the bento card inventory during `/architect` (2026-05-17 → 2026-05-18), the free-tier "Webhook activity (recent 3-5 events)" card was dropped in favor of a "User profile" card, and the "Available extension points" card was dropped in favor of a "Tenant info" card. With no card consuming per-tenant `processed_events` queries, the schema migration is no longer required for PRD-002.
+
+**Status remains Deferred (not Rejected) because:**
+- The architectural reasoning still holds — if a future PRD adds a per-tenant activity surface, Option A (`tenant_id` column on `processed_events`) is still the recommended path.
+- This ADR is preserved as the reference design for that future work (likely PRD-005 candidate per the "real Sitecore dynamic data" addon captured in PRD-002 § 15).
+- Adopters who want a webhook-activity card today can apply this ADR's migration locally — it's a one-line SQL change.
+
+**Pre-ship state:**
 
 ## Context
 

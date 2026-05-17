@@ -22,7 +22,7 @@ This directory holds ADRs for this product workspace.
 | ADR-0014 | Iframe success-return — postMessage primary + 3s/30s polling fallback | Accepted |
 | ADR-0015 | Stripe Customer orphan recovery via `metadata.tenant_id` lookup before create | Accepted |
 | ADR-0016 | Theme toggle always visible (showcase posture; departs from env-gating policy) | Accepted |
-| ADR-0017 | Add `tenant_id` column to `processed_events` for per-tenant activity filtering | Accepted |
+| ADR-0017 | Add `tenant_id` column to `processed_events` for per-tenant activity filtering | Deferred (2026-05-18) |
 | ADR-0018 | Premium bento cards ship fake/marketing data only; production-hardening is adopter responsibility | Accepted |
 
 ## Next number

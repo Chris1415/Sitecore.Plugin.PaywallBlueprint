@@ -2,10 +2,10 @@
   "schema_version": 6,
   "run_id": "20260517T223000Z",
   "created_at": "2026-05-17T22:30:00Z",
-  "updated_at": "2026-05-17T23:00:00Z",
+  "updated_at": "2026-05-18T00:30:00Z",
   "product_slug": "paywall-blueprint",
   "product_root": "products/paywall-blueprint",
-  "status": "spec_ready",
+  "status": "ui_ready",
   "prd_input_mode": "prompt_only",
   "platform_target": "marketplace",
   "task_breakdown_style": "tdd",
@@ -19,8 +19,12 @@
   "ui_design": {
     "proposal_count": 2,
     "divergence": "moderate",
-    "variant_paths": [],
-    "selected_variant_path": null
+    "variant_paths": [
+      "products/paywall-blueprint/project-planning/ui-design/ui-design-20260517T223000Z-v1.md",
+      "products/paywall-blueprint/project-planning/ui-design/ui-design-20260517T223000Z-v2.md"
+    ],
+    "selected_variant_path": "products/paywall-blueprint/project-planning/ui-design/ui-design-20260517T223000Z-v2.md",
+    "selected_poc_path": "products/paywall-blueprint/pocs/poc-v2-prd002/"
   },
   "source": {
     "kind": "raw_idea",
@@ -122,6 +126,15 @@
       "outcome": "completed",
       "error": null,
       "notes": "Architecture 653 lines, all 11 sections. SDK contract gate handled inline for xmc.sites.listSites (Mode A wrapped-options, double .data.data unwrap, Xmapp namespace types, contextId guarded-not-cast, .live policy); Tranche A capture gate added. ADR scan: 0 new ADRs proposed; run stays at 3 (0016-0018). 4 risks captured: R-G processed_events.event_type column may not exist (Tranche A inspection gate added); R-K --primary-foreground token pair safety; R-J ThemeToggle hydration mismatch; SDK shape assumption deferred to Tranche A. No infrastructure delta."
+    },
+    {
+      "stage": "ui_ready",
+      "agent": "05-ui-designer",
+      "entered_at": "2026-05-17T23:30:00Z",
+      "exited_at": "2026-05-18T00:30:00Z",
+      "outcome": "completed",
+      "error": null,
+      "notes": "2 UI variants written in parallel (v1 Mosaic Discipline fixed-grid 842 lines; v2 Editorial Cadence asymmetric masonry 766 lines). 2 POC clickdummies generated in parallel (self-contained HTML/CSS/JS, file://-openable, no build). 8 desktop screenshots captured (light+dark x locked+unlocked per variant). Operator iterated on card content: original brief had real events + extension points free cards; revised to user profile + tenant info; premium cards re-themed from generic SEO/Performance to Sitecore-flavored (Publishing activity, Content distribution, Recent edits with site\u2022template references, CMS health KPIs, Sitecore content insights, Content health score). v2 critical bug surfaced + fixed mid-stream: Subscribe banner was a CHILD of .premium-region, inheriting parent's filter:blur(12px) \u2014 banner unreadable. Restructured: banner wrapped as SIBLING of .premium-region inside new .premium-section div. **Operator selected v2 (Editorial Cadence).** ADR-0017 (processed_events.tenant_id) NOW DEFERRED since the new free card inventory drops the webhook activity card \u2014 schema migration no longer needed in PRD-002. Operator note for future: 'I see in the premium area quite a few values which we can also get easily from Sitecore dynamically. WE should keep this in mind as a nice addon' \u2014 captured in PRD-002 \u00a7 15 Future Opportunities as PRD-005 candidate."
     }
   ],
   "implementation": {
