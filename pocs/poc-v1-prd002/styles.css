@@ -474,13 +474,136 @@ body {
 }
 
 /* =============================================================
- * F5 ExtensionPointsCard
+ * F4 UserProfileCard
+ * ============================================================= */
+
+.bento-card__profile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  min-width: 0;
+}
+
+.bento-card__profile-avatar {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+}
+
+.bento-card__profile-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bento-card__profile-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  line-height: 1.25;
+}
+
+.bento-card__profile-email {
+  margin: 0;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.4;
+}
+
+.bento-card__profile-sub {
+  margin: 2px 0 0 0;
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* =============================================================
+ * F5 TenantInfoCard (key-value list)
  * ============================================================= */
 
 .bento-card__chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-2);
+}
+
+.bento-card__kv-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bento-card__kv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: 6px 0;
+  border-bottom: 1px solid hsl(var(--border));
+  min-width: 0;
+}
+
+.bento-card__kv-row:last-child {
+  border-bottom: 0;
+}
+
+.bento-card__kv-key {
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.bento-card__kv-value {
+  margin: 0;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  font-weight: 500;
+  text-align: right;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bento-card__kv-value--mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* =============================================================
+ * Premium card subtitle (under icon row, before chart/list)
+ * ============================================================= */
+
+.bento-card__chart-subtitle {
+  margin: -4px 0 4px 0;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.4;
+}
+
+.bento-card__kpi-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  color: hsl(var(--muted-foreground));
+  letter-spacing: 0.02em;
 }
 
 /* =============================================================

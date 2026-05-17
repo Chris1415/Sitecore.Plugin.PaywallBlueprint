@@ -395,9 +395,17 @@ a:focus-visible,
  * Implemented as an inner grid that mirrors the parent's column scheme
  * + only the premium rows, so blur/aria-hidden wrap correctly without
  * affecting the free row. */
-.premium-region {
+/* .premium-section is the grid item AND the positioning context for the
+   absolutely-positioned Subscribe banner. The banner is a sibling of
+   .premium-region so the parent's filter:blur(12px) doesn't rasterize
+   the banner. */
+.premium-section {
   grid-column: 1 / -1;
   grid-row: 4 / 7;
+  position: relative;
+}
+
+.premium-region {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows:
@@ -409,7 +417,6 @@ a:focus-visible,
     "p4 p4 p4 p4"
     "p5 p5 p6 p6";
   gap: var(--spacing-4);
-  position: relative;
 }
 
 /* -------------------------------------------------------------
@@ -845,6 +852,169 @@ a:focus-visible,
 
 @media (max-width: 1023.98px) {
   .extension-points { flex-direction: column; align-items: flex-start; }
+}
+
+/* -------------------------------------------------------------
+ * F4 — UserProfileCard
+ * ----------------------------------------------------------- */
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.user-profile__avatar {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  letter-spacing: 0.04em;
+}
+
+.user-profile__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.user-profile__name {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  line-height: 1.2;
+}
+
+.user-profile__email {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: hsl(var(--muted-foreground));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-profile__sub {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-mono, ui-monospace, monospace);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* -------------------------------------------------------------
+ * F5 — TenantInfoCard (wide strip, key-value rows)
+ * ----------------------------------------------------------- */
+
+.tenant-info {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-6);
+  padding: var(--spacing-5) var(--spacing-6);
+}
+
+.tenant-info__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  flex-shrink: 0;
+}
+
+.tenant-info__sub {
+  font-size: var(--font-size-sm);
+  color: hsl(var(--muted-foreground));
+  font-weight: 400;
+}
+
+.tenant-info__rows {
+  margin: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.tenant-info__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tenant-info__key {
+  font-size: var(--font-size-xs);
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tenant-info__value {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: hsl(var(--foreground));
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tenant-info__value--mono {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: var(--font-size-xs);
+}
+
+@media (max-width: 1023.98px) {
+  .tenant-info { flex-direction: column; align-items: flex-start; }
+  .tenant-info__rows { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 599.98px) {
+  .tenant-info__rows { grid-template-columns: 1fr; }
+}
+
+/* -------------------------------------------------------------
+ * Generic premium-card subtitle (under .blok-card__title)
+ * ----------------------------------------------------------- */
+
+.blok-card__subtitle {
+  margin: -4px 0 0 0;
+  font-size: var(--font-size-sm);
+  color: hsl(var(--muted-foreground));
+  line-height: 1.4;
+}
+
+.engagement-score__forecast-title {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  line-height: 1.2;
+}
+
+.engagement-score__forecast-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--font-size-xs);
+  color: hsl(var(--muted-foreground));
+  line-height: 1.4;
 }
 
 /* -------------------------------------------------------------
@@ -1438,6 +1608,13 @@ body.locked .premium-placeholder {
     align-items: flex-start;
     padding: var(--spacing-4);
   }
+
+  .tenant-info {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--spacing-4);
+  }
+  .tenant-info__rows { grid-template-columns: 1fr; gap: var(--spacing-3); }
 
   .engagement-metrics {
     flex-direction: column;

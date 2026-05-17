@@ -240,12 +240,12 @@
              FREE ROW 2
              ============================================================ -->
 
-        <!-- F4 RecentActivity (row 2, col 1) -->
+        <!-- F4 UserProfileCard (row 2, col 1) -->
         <section
           class="blok-card bento-card bento-card--free"
           aria-labelledby="card-f4-title"
         >
-          <h2 id="card-f4-title" class="sr-only">Recent activity</h2>
+          <h2 id="card-f4-title" class="sr-only">Profile</h2>
           <div class="bento-card__icon-row">
             <svg
               class="bento-card__icon"
@@ -257,50 +257,27 @@
               stroke-linejoin="round"
               aria-hidden="true"
             >
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
             </svg>
-            <span class="bento-card__icon-label">Recent activity</span>
+            <span class="bento-card__icon-label">Profile</span>
           </div>
-          <ul class="bento-card__activity-list">
-            <li class="bento-card__activity-row">
-              <span class="bento-card__activity-event"
-                >checkout.session.completed</span
-              >
-              <span class="bento-card__activity-time">2h ago</span>
-            </li>
-            <li class="bento-card__activity-row">
-              <span class="bento-card__activity-event"
-                >customer.subscription.updated</span
-              >
-              <span class="bento-card__activity-time">5h ago</span>
-            </li>
-            <li class="bento-card__activity-row">
-              <span class="bento-card__activity-event"
-                >invoice.payment_succeeded</span
-              >
-              <span class="bento-card__activity-time">yesterday</span>
-            </li>
-            <li class="bento-card__activity-row">
-              <span class="bento-card__activity-event"
-                >checkout.session.completed</span
-              >
-              <span class="bento-card__activity-time">2d ago</span>
-            </li>
-            <li class="bento-card__activity-row">
-              <span class="bento-card__activity-event"
-                >customer.created</span
-              >
-              <span class="bento-card__activity-time">3d ago</span>
-            </li>
-          </ul>
+          <div class="bento-card__profile">
+            <span class="bento-card__profile-avatar" aria-hidden="true">CH</span>
+            <div class="bento-card__profile-body">
+              <p class="bento-card__profile-name">Christian Hahn</p>
+              <p class="bento-card__profile-email">christian@hahn-solo.net</p>
+              <p class="bento-card__profile-sub">auth0|abc123def456gh789ij…</p>
+            </div>
+          </div>
         </section>
 
-        <!-- F5 ExtensionPointsCard (row 2, col 2) -->
+        <!-- F5 TenantInfoCard (row 2, col 2) -->
         <section
           class="blok-card bento-card bento-card--free"
           aria-labelledby="card-f5-title"
         >
-          <h2 id="card-f5-title" class="sr-only">Extension points</h2>
+          <h2 id="card-f5-title" class="sr-only">Tenant</h2>
           <div class="bento-card__icon-row">
             <svg
               class="bento-card__icon"
@@ -312,17 +289,36 @@
               stroke-linejoin="round"
               aria-hidden="true"
             >
-              <path
-                d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"
-              />
+              <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+              <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+              <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
+              <path d="M10 6h4" />
+              <path d="M10 10h4" />
+              <path d="M10 14h4" />
+              <path d="M10 18h4" />
             </svg>
-            <span class="bento-card__icon-label"
-              >Available extension points</span
-            >
+            <span class="bento-card__icon-label">Tenant</span>
           </div>
-          <div class="bento-card__chip-row">
-            <span class="blok-badge blok-badge--outline">xmc:fullscreen</span>
-          </div>
+          <dl class="bento-card__kv-list">
+            <div class="bento-card__kv-row">
+              <dt class="bento-card__kv-key">Display name</dt>
+              <dd class="bento-card__kv-value">Hahn-Solo Demo Tenant</dd>
+            </div>
+            <div class="bento-card__kv-row">
+              <dt class="bento-card__kv-key">Tenant ID</dt>
+              <dd class="bento-card__kv-value bento-card__kv-value--mono">
+                0d4b9c4d…a91c
+              </dd>
+            </div>
+            <div class="bento-card__kv-row">
+              <dt class="bento-card__kv-key">Organization</dt>
+              <dd class="bento-card__kv-value">Hahn-Solo</dd>
+            </div>
+            <div class="bento-card__kv-row">
+              <dt class="bento-card__kv-key">Environment</dt>
+              <dd class="bento-card__kv-value">Production</dd>
+            </div>
+          </dl>
         </section>
 
         <!-- Spacer (row 2, col 3) -->
@@ -337,7 +333,7 @@
             class="blok-card bento-card bento-card--premium"
             aria-labelledby="card-p1-title"
           >
-            <h2 id="card-p1-title" class="sr-only">Activity trends</h2>
+            <h2 id="card-p1-title" class="sr-only">Publishing activity</h2>
             <span class="blok-badge blok-badge--default bento-card__premium-corner"
               >Premium</span
             >
@@ -355,9 +351,12 @@
                 <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
                 <polyline points="16 7 22 7 22 13" />
               </svg>
-              <span class="bento-card__icon-label">Activity trends</span>
-              <span class="bento-card__icon-suffix">(30d)</span>
+              <span class="bento-card__icon-label">Publishing activity</span>
+              <span class="bento-card__icon-suffix">30d</span>
             </div>
+            <p class="bento-card__chart-subtitle">
+              Publish frequency across all sites
+            </p>
             <!-- Inline SVG area-chart silhouette: 30-day pattern -->
             <svg
               class="bento-card__chart"
@@ -407,7 +406,7 @@
             class="blok-card bento-card bento-card--premium"
             aria-labelledby="card-p2-title"
           >
-            <h2 id="card-p2-title" class="sr-only">Content health</h2>
+            <h2 id="card-p2-title" class="sr-only">Content distribution</h2>
             <span class="blok-badge blok-badge--default bento-card__premium-corner"
               >Premium</span
             >
@@ -422,49 +421,65 @@
                 stroke-linejoin="round"
                 aria-hidden="true"
               >
-                <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
-                <path d="m9 12 2 2 4-4" />
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
               </svg>
-              <span class="bento-card__icon-label">Content health</span>
+              <span class="bento-card__icon-label">Content distribution</span>
             </div>
+            <p class="bento-card__chart-subtitle">Items by template type</p>
             <div class="bento-card__health-row">
-              <span class="bento-card__health-label">SEO score</span>
-              <span class="bento-card__health-value">87%</span>
+              <span class="bento-card__health-label">Pages</span>
+              <span class="bento-card__health-value">124 · 47%</span>
             </div>
             <div
               class="blok-progress"
               role="progressbar"
-              aria-valuenow="87"
+              aria-valuenow="47"
               aria-valuemin="0"
               aria-valuemax="100"
             >
-              <div class="blok-progress__fill" style="width: 87%"></div>
+              <div class="blok-progress__fill" style="width: 47%"></div>
             </div>
             <div class="bento-card__health-row">
-              <span class="bento-card__health-label">Performance</span>
-              <span class="bento-card__health-value">92%</span>
+              <span class="bento-card__health-label">Datasources</span>
+              <span class="bento-card__health-value">89 · 34%</span>
             </div>
             <div
               class="blok-progress"
               role="progressbar"
-              aria-valuenow="92"
+              aria-valuenow="34"
               aria-valuemin="0"
               aria-valuemax="100"
             >
-              <div class="blok-progress__fill" style="width: 92%"></div>
+              <div class="blok-progress__fill" style="width: 34%"></div>
             </div>
             <div class="bento-card__health-row">
-              <span class="bento-card__health-label">Accessibility</span>
-              <span class="bento-card__health-value">78%</span>
+              <span class="bento-card__health-label">Components</span>
+              <span class="bento-card__health-value">47 · 18%</span>
             </div>
             <div
               class="blok-progress"
               role="progressbar"
-              aria-valuenow="78"
+              aria-valuenow="18"
               aria-valuemin="0"
               aria-valuemax="100"
             >
-              <div class="blok-progress__fill" style="width: 78%"></div>
+              <div class="blok-progress__fill" style="width: 18%"></div>
+            </div>
+            <div class="bento-card__health-row">
+              <span class="bento-card__health-label">Forms</span>
+              <span class="bento-card__health-value">23 · 9%</span>
+            </div>
+            <div
+              class="blok-progress"
+              role="progressbar"
+              aria-valuenow="9"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <div class="blok-progress__fill" style="width: 9%"></div>
             </div>
           </section>
 
@@ -492,51 +507,52 @@
                 <path d="m15 5 4 4" />
               </svg>
               <span class="bento-card__icon-label">Recent edits</span>
+              <span class="bento-card__icon-suffix">across all sites</span>
             </div>
             <ul class="bento-card__edits-list">
               <li class="bento-card__edit-row">
                 <span class="bento-card__avatar">CH</span>
                 <div class="bento-card__edit-text">
                   <p class="bento-card__edit-primary">
-                    Project Alpha · Hero updated
+                    Marketing Site · Homepage hero
                   </p>
                   <p class="bento-card__edit-meta">2h ago</p>
                 </div>
               </li>
               <li class="bento-card__edit-row">
-                <span class="bento-card__avatar">MR</span>
+                <span class="bento-card__avatar">AB</span>
                 <div class="bento-card__edit-text">
                   <p class="bento-card__edit-primary">
-                    Marketing Site · Footer changed
+                    Blog · Post template
                   </p>
                   <p class="bento-card__edit-meta">yesterday</p>
-                </div>
-              </li>
-              <li class="bento-card__edit-row">
-                <span class="bento-card__avatar">JK</span>
-                <div class="bento-card__edit-text">
-                  <p class="bento-card__edit-primary">
-                    Blog · New post published
-                  </p>
-                  <p class="bento-card__edit-meta">2d ago</p>
-                </div>
-              </li>
-              <li class="bento-card__edit-row">
-                <span class="bento-card__avatar">AS</span>
-                <div class="bento-card__edit-text">
-                  <p class="bento-card__edit-primary">
-                    Pricing · Plan card edit
-                  </p>
-                  <p class="bento-card__edit-meta">3d ago</p>
                 </div>
               </li>
               <li class="bento-card__edit-row">
                 <span class="bento-card__avatar">CH</span>
                 <div class="bento-card__edit-text">
                   <p class="bento-card__edit-primary">
-                    Home · Navigation reordered
+                    Company Site · Footer datasource
                   </p>
-                  <p class="bento-card__edit-meta">last week</p>
+                  <p class="bento-card__edit-meta">2d ago</p>
+                </div>
+              </li>
+              <li class="bento-card__edit-row">
+                <span class="bento-card__avatar">MS</span>
+                <div class="bento-card__edit-text">
+                  <p class="bento-card__edit-primary">
+                    Product Catalog · Featured product card
+                  </p>
+                  <p class="bento-card__edit-meta">3d ago</p>
+                </div>
+              </li>
+              <li class="bento-card__edit-row">
+                <span class="bento-card__avatar">AB</span>
+                <div class="bento-card__edit-text">
+                  <p class="bento-card__edit-primary">
+                    Marketing Site · Career page meta
+                  </p>
+                  <p class="bento-card__edit-meta">4d ago</p>
                 </div>
               </li>
             </ul>
@@ -547,7 +563,7 @@
             class="blok-card bento-card bento-card--premium"
             aria-labelledby="card-p4-title"
           >
-            <h2 id="card-p4-title" class="sr-only">Engagement metrics</h2>
+            <h2 id="card-p4-title" class="sr-only">CMS health overview</h2>
             <span class="blok-badge blok-badge--default bento-card__premium-corner"
               >Premium</span
             >
@@ -562,53 +578,55 @@
                 stroke-linejoin="round"
                 aria-hidden="true"
               >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                <path d="M20 7h-3a2 2 0 0 1-2-2V2" />
+                <path d="M9 18a4.6 4.6 0 0 0 0-9H4v9Z" />
+                <path d="M14 2H6a2 2 0 0 0-2 2v3" />
+                <path d="M20 7v13a2 2 0 0 1-2 2h-2" />
               </svg>
-              <span class="bento-card__icon-label">Engagement</span>
+              <span class="bento-card__icon-label">CMS health overview</span>
+              <span class="bento-card__icon-suffix">30d</span>
             </div>
             <dl class="bento-card__kpi-grid">
               <div class="bento-card__kpi-tile">
-                <dt class="bento-card__kpi-label">Page views</dt>
+                <dt class="bento-card__kpi-label">Total pages</dt>
                 <dd
                   class="bento-card__kpi-value"
-                  data-counter-target="12400"
-                  data-counter-format="thousands"
-                >
-                  12,400
-                </dd>
-              </div>
-              <div class="bento-card__kpi-tile">
-                <dt class="bento-card__kpi-label">Conversions</dt>
-                <dd
-                  class="bento-card__kpi-value"
-                  data-counter-target="248"
+                  data-counter-target="489"
                   data-counter-format="number"
                 >
-                  248
+                  489
                 </dd>
               </div>
               <div class="bento-card__kpi-tile">
-                <dt class="bento-card__kpi-label">Avg session</dt>
+                <dt class="bento-card__kpi-label">Published this week</dt>
                 <dd
                   class="bento-card__kpi-value"
-                  data-counter-target="32"
-                  data-counter-format="duration"
+                  data-counter-target="12"
+                  data-counter-format="number"
                 >
-                  4m 32s
+                  12
                 </dd>
               </div>
               <div class="bento-card__kpi-tile">
-                <dt class="bento-card__kpi-label">Bounce</dt>
+                <dt class="bento-card__kpi-label">Languages</dt>
                 <dd
                   class="bento-card__kpi-value"
-                  data-counter-target="28"
-                  data-counter-format="percent"
+                  data-counter-target="4"
+                  data-counter-format="number"
                 >
-                  28%
+                  4
                 </dd>
+              </div>
+              <div class="bento-card__kpi-tile">
+                <dt class="bento-card__kpi-label">Stale items</dt>
+                <dd
+                  class="bento-card__kpi-value"
+                  data-counter-target="23"
+                  data-counter-format="number"
+                >
+                  23
+                </dd>
+                <span class="bento-card__kpi-sub">Not updated in 90+ days</span>
               </div>
             </dl>
           </section>
@@ -618,7 +636,7 @@
             class="blok-card bento-card bento-card--premium"
             aria-labelledby="card-p5-title"
           >
-            <h2 id="card-p5-title" class="sr-only">AI insights</h2>
+            <h2 id="card-p5-title" class="sr-only">Sitecore content insights</h2>
             <span class="blok-badge blok-badge--default bento-card__premium-corner"
               >Premium</span
             >
@@ -637,25 +655,29 @@
                   d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"
                 />
               </svg>
-              <span class="bento-card__icon-label">AI insights</span>
+              <span class="bento-card__icon-label">Sitecore content insights</span>
+              <span class="bento-card__icon-suffix">AI</span>
             </div>
             <ul class="bento-card__insight-list">
               <li class="bento-card__insight-row">
                 <span class="bento-card__insight-dot" aria-hidden="true"></span>
                 <span class="bento-card__insight-text"
-                  >Your busiest day is typically Tuesday.</span
+                  >Your blog template is reused 47 times across 3 sites —
+                  consider promoting to a shared component.</span
                 >
               </li>
               <li class="bento-card__insight-row">
                 <span class="bento-card__insight-dot" aria-hidden="true"></span>
                 <span class="bento-card__insight-text"
-                  >Premium content drives 3.2× engagement.</span
+                  >12 items haven't been updated in 90+ days — review for
+                  archival candidates.</span
                 >
               </li>
               <li class="bento-card__insight-row">
                 <span class="bento-card__insight-dot" aria-hidden="true"></span>
                 <span class="bento-card__insight-text"
-                  >Consider scheduling around peak windows.</span
+                  >Publishing frequency dropped 23% Mon–Fri vs last week —
+                  check editorial calendar.</span
                 >
               </li>
             </ul>
@@ -666,7 +688,7 @@
             class="blok-card bento-card bento-card--premium"
             aria-labelledby="card-p6-title"
           >
-            <h2 id="card-p6-title" class="sr-only">Engagement score</h2>
+            <h2 id="card-p6-title" class="sr-only">Content health score</h2>
             <span class="blok-badge blok-badge--default bento-card__premium-corner"
               >Premium</span
             >
@@ -684,8 +706,11 @@
                 <path d="m12 14 4-4" />
                 <path d="M3.34 19a10 10 0 1 1 17.32 0" />
               </svg>
-              <span class="bento-card__icon-label">Engagement score</span>
+              <span class="bento-card__icon-label">Content health score</span>
             </div>
+            <p class="bento-card__chart-subtitle">
+              Composite of freshness, coverage, and link integrity
+            </p>
             <div class="bento-card__score-split">
               <!-- Progress ring -->
               <div class="bento-card__score-ring">
