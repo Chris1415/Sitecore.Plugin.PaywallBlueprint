@@ -41,8 +41,11 @@ const APP_SLUG = 'paywall-blueprint';
  *   v1 — initial T011 shape (no customer_update; failed automatic_tax with
  *        customer_tax_location_invalid against real tenants)
  *   v2 — added customer_update: { address: 'auto', name: 'auto' }
+ *   v3 — bump to clear stale Live-mode v2 keys after switching from Sandbox
+ *        to Live (Sandbox and Live caches are separate; bumping here
+ *        unblocks Live testing without waiting 24h for v2 keys to expire)
  */
-const CHECKOUT_PARAMS_VERSION = 'v2';
+const CHECKOUT_PARAMS_VERSION = 'v3';
 
 // NOTE: StripeProvider intentionally does NOT declare `implements PaymentProvider`.
 // The PaymentProvider interface's parseWebhookPayload(rawBody: string) signature diverges
