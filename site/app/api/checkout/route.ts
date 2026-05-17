@@ -20,7 +20,7 @@ import { StripeProvider } from '@/src/lib/paywall/providers/StripeProvider';
 import { translateStripeError } from '@/src/lib/paywall/stripe-errors';
 
 export async function POST(request: Request): Promise<Response> {
-  let body: { tenantId?: string; userEmail?: string };
+  let body: { tenantId?: string; userEmail?: string; version?: string };
 
   try {
     body = await request.json();
@@ -28,7 +28,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { tenantId, userEmail } = body;
+  const { tenantId, userEmail, version } = body;
 
   // Validate required fields (T016b)
   if (!tenantId || !userEmail) {
@@ -51,9 +51,17 @@ export async function POST(request: Request): Promise<Response> {
     process.env.STRIPE_WEBHOOK_SIGNING_SECRET ?? '',
   );
 
-  // Call Stripe — translate errors to user-friendly messages (FR-2)
+  // Call Stripe — translate errors to user-friendly messages (FR-2).
+  // `version` (when present) overrides the idempotency-key version
+  // segment (UI tier of the three-tier precedence). See
+  // StripeProvider.generateCheckoutUrl JSDoc.
   try {
-    const url = await provider.generateCheckoutUrl({ tenantId, userEmail, returnUrl });
+    const url = await provider.generateCheckoutUrl({
+      tenantId,
+      userEmail,
+      returnUrl,
+      version: typeof version === 'string' && version.length > 0 ? version : undefined,
+    });
     return Response.json({ url }, { status: 200 });
   } catch (err) {
     const { message, status } = translateStripeError(err);

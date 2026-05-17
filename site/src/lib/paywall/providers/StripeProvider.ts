@@ -41,8 +41,25 @@ const APP_SLUG = 'paywall-blueprint';
  *   v1 — initial T011 shape (no customer_update; failed automatic_tax with
  *        customer_tax_location_invalid against real tenants)
  *   v2 — added customer_update: { address: 'auto', name: 'auto' }
+ *   v3 — bump to clear stale Live-mode v2 keys after switching from Sandbox
+ *        to Live (Sandbox and Live caches are separate; bumping here
+ *        unblocks Live testing without waiting 24h for v2 keys to expire)
+ *
+ * Three-tier precedence (highest wins) for the effective version at request time:
+ *   1. UI override — `version` field on the POST /api/checkout body. The
+ *      useEntitlement hook reads it from `?paywall_version=<value>` in the
+ *      browser URL (falling back to localStorage `paywall_version`). Lets the
+ *      operator force a fresh idempotency key from the browser without
+ *      touching env vars or redeploying.
+ *   2. Env var — STRIPE_CHECKOUT_PARAMS_VERSION (set in Vercel / hosting
+ *      project settings; Vercel auto-redeploys on env-var change, ~30s).
+ *   3. Code default — the value of this constant.
+ *
+ * Resolution: `args.version ?? CHECKOUT_PARAMS_VERSION` at call time, where
+ * CHECKOUT_PARAMS_VERSION is itself env-var-or-default at module init.
  */
-const CHECKOUT_PARAMS_VERSION = 'v2';
+const CHECKOUT_PARAMS_VERSION =
+  process.env.STRIPE_CHECKOUT_PARAMS_VERSION ?? 'v3';
 
 // NOTE: StripeProvider intentionally does NOT declare `implements PaymentProvider`.
 // The PaymentProvider interface's parseWebhookPayload(rawBody: string) signature diverges
@@ -83,10 +100,26 @@ export class StripeProvider {
     tenantId: string;
     userEmail: string;
     returnUrl: string;
+    /**
+     * Optional per-request version override (UI tier). When set, REPLACES
+     * the version segment of the Stripe idempotency key — the key becomes
+     * `${tenantId}:${version}` (not appended). Three-tier precedence:
+     *   1. args.version (this field, from POST body, from URL param or
+     *      localStorage on the client)
+     *   2. process.env.STRIPE_CHECKOUT_PARAMS_VERSION (resolved into
+     *      CHECKOUT_PARAMS_VERSION at module load)
+     *   3. code default 'v3' (inside CHECKOUT_PARAMS_VERSION)
+     */
+    version?: string;
   }): Promise<string> {
-    const { tenantId, userEmail, returnUrl } = args;
+    const { tenantId, userEmail, returnUrl, version } = args;
 
     const customer = await this.findOrCreateStripeCustomer({ tenantId, userEmail });
+
+    // Three-tier precedence: UI (args.version) → env var (folded into
+    // CHECKOUT_PARAMS_VERSION at module load) → code default ('v3').
+    const effectiveVersion = version ?? CHECKOUT_PARAMS_VERSION;
+    const idempotencyKey = `${tenantId}:${effectiveVersion}`;
 
     // source: node_modules/stripe/cjs/resources/Checkout/Sessions.d.ts → SessionCreateParams
     // customer_update.address: 'auto' is REQUIRED when automatic_tax is enabled and the
@@ -105,7 +138,7 @@ export class StripeProvider {
         customer: customer.id,
         metadata: { tenant_id: tenantId },
       },
-      { idempotencyKey: `${tenantId}:${CHECKOUT_PARAMS_VERSION}` },
+      { idempotencyKey },
     );
 
     return session.url!;
