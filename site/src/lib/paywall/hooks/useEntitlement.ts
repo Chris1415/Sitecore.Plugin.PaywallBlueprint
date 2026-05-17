@@ -110,6 +110,16 @@ export function useEntitlement(): UseEntitlementReturn {
 
   // -------------------------------------------------------------------------
   // resolveSuccess — called when a poll returns 'allowed'. Atomicity enforced.
+  //
+  // After tearing down the polling state machine, hard-reload the iframe so
+  // the gate re-evaluates from scratch against the entitlement store. The
+  // PaywallGate also subscribes to entitlement state (T036) and bumps a
+  // refresh key, but in practice that can race with Radix portal teardown
+  // and leave the dialog visually on top of the new AllowedState. A full
+  // reload is deterministic — the iframe restarts, the SDK handshake
+  // re-runs, the store query re-fires, the gate renders AllowedState
+  // cleanly. The cost is ~1s of iframe loading; the win is zero ambiguity
+  // for the post-payment refresh.
   // -------------------------------------------------------------------------
   const resolveSuccess = useCallback(
     (result: EntitlementResult) => {
@@ -117,6 +127,9 @@ export function useEntitlement(): UseEntitlementReturn {
       outcomeSettledRef.current = true;
       setEntitlement(result);
       stopPolling();
+      if (typeof window !== "undefined") {
+        window.location.reload();
+      }
     },
     [stopPolling]
   );
