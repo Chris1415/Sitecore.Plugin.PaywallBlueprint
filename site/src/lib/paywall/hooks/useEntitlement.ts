@@ -177,10 +177,38 @@ export function useEntitlement(): UseEntitlementReturn {
     outcomeSettledRef.current = false;
 
     try {
+      // UI tier of the three-tier idempotency-key-version precedence
+      // (see StripeProvider.ts JSDoc):
+      //   1. URL ?paywall_version=<value>  — ephemeral, per-tab
+      //   2. localStorage 'paywall_version' — persistent per browser
+      //   3. (server falls back to STRIPE_CHECKOUT_PARAMS_VERSION env var,
+      //      then to the code default 'v3')
+      // Lets the operator force a fresh idempotency key from the browser
+      // after deleting a tenants row in Supabase or after a Sandbox<->Live
+      // switch, without bumping the env var or redeploying.
+      let version: string | undefined;
+      if (typeof window !== 'undefined') {
+        const urlValue = new URLSearchParams(window.location.search).get(
+          'paywall_version',
+        );
+        if (urlValue && urlValue.length > 0) {
+          version = urlValue;
+        } else {
+          try {
+            const storedValue = window.localStorage.getItem('paywall_version');
+            if (storedValue && storedValue.length > 0) {
+              version = storedValue;
+            }
+          } catch {
+            // localStorage can be blocked in some iframe sandbox configs; fall through.
+          }
+        }
+      }
+
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ tenantId, userEmail }),
+        body: JSON.stringify({ tenantId, userEmail, ...(version ? { version } : {}) }),
       });
 
       const body = (await res.json()) as { url?: string; error?: string };
