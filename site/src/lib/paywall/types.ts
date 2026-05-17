@@ -101,7 +101,7 @@ export interface PaymentProvider {
   verifyWebhookSignature(
     rawBody: string,
     signature: string,
-  ): Promise<boolean>;
+  ): Promise<unknown>; // provider-specific event object; concrete type is provider-defined (e.g. Stripe.Event in StripeProvider)
 
   parseWebhookPayload(rawBody: string): Promise<{
     providerEventId: string;

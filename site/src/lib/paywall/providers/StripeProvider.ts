@@ -4,11 +4,10 @@
  * First concrete PaymentProvider implementation (ADR-0003).
  * Implements Stripe direct integration for one-time €0.99 EUR lifetime payment (ADR-0012).
  *
- * NOTE: StripeProvider's verifyWebhookSignature returns Stripe.Event (not Promise<boolean>)
- * as required by T021 and the webhook dispatch contract. The PaymentProvider interface in
- * types.ts declares Promise<boolean> — this divergence will be reconciled when PRD-003
- * extends the interface. StripeProvider intentionally does NOT use `implements PaymentProvider`
- * to avoid the type conflict in strict mode without touching types.ts (which is locked in PRD-001).
+ * verifyWebhookSignature returns Promise<Stripe.Event> which satisfies the interface's
+ * Promise<unknown> (Tranche E type reconciliation). The interface return type was changed
+ * from Promise<boolean> to Promise<unknown> to honestly reflect that each provider returns
+ * its own event object — the webhook route casts to the concrete type after calling this method.
  *
  * ADR-0015: Stripe Customer orphan recovery via metadata.app_slug + multi-candidate handling.
  * APP_SLUG constant scopes Customer lookup to this app only — adopters forking must change this.
@@ -45,6 +44,13 @@ const APP_SLUG = 'paywall-blueprint';
  */
 const CHECKOUT_PARAMS_VERSION = 'v2';
 
+// NOTE: StripeProvider intentionally does NOT declare `implements PaymentProvider`.
+// The PaymentProvider interface's parseWebhookPayload(rawBody: string) signature diverges
+// from the runtime contract (StripeProvider takes a pre-parsed Stripe.Event — the route
+// calls verifyWebhookSignature first, then passes the resulting event to parseWebhookPayload).
+// Reconciliation deferred to PRD-003 when a second provider lands and the interface is
+// revised to reflect the real calling convention. verifyWebhookSignature return type was
+// corrected from Promise<boolean> to Promise<unknown> in Tranche E (types.ts).
 export class StripeProvider {
   private readonly stripe: Stripe;
 

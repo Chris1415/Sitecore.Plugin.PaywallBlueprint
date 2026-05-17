@@ -301,3 +301,226 @@ The following gates were recorded in the run manifest (`project-planning/workflo
 | Tranche E — cold-reader (G3) | T050 | pending (operator action) |
 
 G3 cold-reader outcome is recorded in `docs/cold-read-notes.md`.
+
+---
+
+# Smoke Walkthrough — PRD-001 (Stripe integration)
+
+PRD-001 adds a real Stripe Checkout flow. The walkthrough below covers the four operator
+gate stages (Tranche A–D). Each stage lists the exact commands to run, expected output,
+and the screenshot reference for evidence.
+
+**Prerequisites (in addition to PRD-000 setup):**
+
+- Stripe account in test mode (free at [stripe.com](https://stripe.com))
+- Stripe CLI installed (`stripe --version`) and logged in (`stripe login`)
+- `.env.local` populated with 4 Stripe vars: `STRIPE_SECRET_KEY`,
+  `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID`,
+  `STRIPE_WEBHOOK_SIGNING_SECRET` (webhook secret filled after `stripe listen` starts)
+
+---
+
+## PRD-001 Tranche A — Scaffold migration verification (operator gate T009)
+
+**Purpose:** confirm the 4a→4b scaffold migration left all 74 existing tests passing
+and both iframe routes rendering correctly in Cloud Portal.
+
+**Commands:**
+
+```bash
+cd site
+npm install
+npm run lint       # expect 0 errors (pre-existing warnings tolerated)
+npm run typecheck  # expect exit 0
+npm run test       # expect ≥ 74 tests pass
+npm run build      # expect exit 0; site/.next/ present
+```
+
+**Expected outcome:**
+
+- All four commands exit 0.
+- Test count ≥ 74 (baseline from PRD-000; zero new failures).
+- `site/.next/server/app/api/` directory present (confirms API routes scaffold is in
+  place after 4b migration).
+- Real-tenant iframe smoke (T009): open the registered custom app in Cloud Portal →
+  `xmc:fullscreen` → `/full-page` loads identically to PRD-000 (free section + gated
+  section visible; Blok topbar; no CSP refused-to-display error).
+
+**Screenshot reference:**
+
+`pocs/screenshots/prd-001-tranche-a-iframe.png` +
+`pocs/screenshots/prd-001-tranche-a-full-page.png`
+
+---
+
+## PRD-001 Tranche B — `stripe listen` + webhook round-trip (operator gate T029)
+
+**Purpose:** verify the webhook handler receives events, upserts tenant rows, and
+enforces idempotency via the Stripe CLI trigger.
+
+**ASCII flow:**
+
+```
+stripe trigger                   stripe listen
+checkout.session.completed  →    (Stripe CLI)  →  POST /api/webhooks/stripe
+                                                     ↓ signature verification
+                                                     ↓ processed_events.insert
+                                                     ↓ tenants.upsert  →  200
+                              resend same event  →  200 silent (idempotent)
+```
+
+**Commands:**
+
+```bash
+# Terminal 1 — dev server (https required for Cloud Portal iframe; skip-verify for mkcert)
+cd site && npm run dev
+
+# Terminal 2 — Stripe listener
+stripe listen --forward-to https://localhost:3000/api/webhooks/stripe --skip-verify
+# Copy the printed whsec_* into site/.env.local as STRIPE_WEBHOOK_SIGNING_SECRET
+# Restart Terminal 1 after updating the secret.
+
+# Terminal 3 — trigger a test event
+stripe trigger checkout.session.completed \
+  --add checkout_session:metadata.tenant_id=<your-tenant-id>
+```
+
+> **Important:** the `--forward-to` URL must be `https://` (not `http://`). The dev
+> server runs under mkcert (`--experimental-https`); the Stripe CLI defaults to
+> `http://` if no scheme is given, which silently fails. The `--skip-verify` flag is
+> required because mkcert is self-signed. Each `stripe listen` session mints a fresh
+> `whsec_*` signing secret — copy it to `.env.local` and restart the dev server.
+
+**Expected outcome:**
+
+- Terminal 2 shows `200 POST /api/webhooks/stripe` for the triggered event.
+- Supabase SQL Editor → `SELECT * FROM tenants` → new row with:
+  - `tenant_id` matching the `--add` value
+  - `status = 'active'`, `plan = 'premium'`, `period_end = null`
+  - `stripe_customer_id` populated
+- Resend `stripe trigger checkout.session.completed` with the same session (or run the
+  trigger again): Terminal 2 shows `200` silently; no duplicate row in `tenants`.
+- `npm run test:env-leak`: exits 0 (no server-only Stripe secrets in client bundle).
+
+**Screenshot reference:**
+
+`pocs/screenshots/prd-001-tranche-b-listen.png` +
+`pocs/screenshots/prd-001-tranche-b-tenants-row.png`
+
+---
+
+## PRD-001 Tranche C — Real €0.99 payment via Cloud Portal iframe (G1 gate, T040)
+
+**Purpose:** end-to-end real-money smoke confirming the full user journey from Cloud
+Portal iframe → Stripe Checkout → `/paywall-return` → iframe AllowedState.
+
+**Reset state (required before the smoke):**
+
+```bash
+cd site
+npm run seed:state -- no-sub --tenant <your-marketplaceAppTenantId>
+```
+
+**ASCII flow:**
+
+```
+Cloud Portal iframe (/full-page)
+    NoSubscriptionState → "View plans"
+         ↓
+    PaywallCheckoutDialog opens
+    Click "Subscribe — €0.99 lifetime"
+         ↓ POST /api/checkout
+         ↓ StripeProvider.generateCheckoutUrl (orphan recovery + session create)
+         ↓ returns { url }
+    window.open(url, '_blank')  →  Stripe Checkout tab opens
+         ↓ user enters card + billing address
+         ↓ Stripe redirects to /paywall-return?session_id=...
+    /paywall-return client fires:
+         window.opener?.postMessage({ type: 'paywall:refresh' }, origin)
+         sessionStorage.setItem('paywall:lastCheckoutCompleted', ...)
+         ↓
+    useEntitlement polling sees status='allowed' (≤30s)
+         ↓
+    PaywallGate transitions → AllowedState
+```
+
+**Steps:**
+
+1. Ensure `stripe listen` is running (Terminal 2) and dev server is running (Terminal 1).
+2. Open the Cloud Portal test app → your registered `xmc:fullscreen` custom app.
+3. Confirm the gate shows `NoSubscriptionState` ("Start your subscription").
+4. Click "View plans" → `PaywallCheckoutDialog` opens with "Subscribe — €0.99 lifetime".
+5. Click "Subscribe — €0.99 lifetime". A new browser tab opens at Stripe Checkout.
+6. Enter card `4242 4242 4242 4242`, any future MM/YY, any CVC, any billing address.
+7. Click "Pay €0.99". Stripe redirects the new tab to `/paywall-return`.
+8. Within 30 seconds, the Cloud Portal iframe transitions to `AllowedState`
+   ("Welcome, [name]...").
+
+**Expected outcome (G1):**
+
+- Iframe transitions to `AllowedState` within 30 seconds of payment.
+- Supabase `tenants` row shows `status='active'`, `stripe_customer_id` populated.
+- `stripe listen` shows the `checkout.session.completed` event delivered 200.
+
+**Screenshot reference:**
+
+`pocs/screenshots/prd-001-tranche-c-dialog.png` +
+`pocs/screenshots/prd-001-tranche-c-checkout.png` +
+`pocs/screenshots/prd-001-tranche-c-return.png` +
+`pocs/screenshots/prd-001-tranche-c-welcome.png`
+
+---
+
+## PRD-001 Tranche D — Production webhook delivery verification (G2 gate, T045)
+
+**Purpose:** confirm all 6 event types deliver 200 to the production webhook endpoint,
+idempotency holds, and a wrong signing secret returns 400.
+
+**Prerequisite:** the production webhook endpoint must be registered in the Stripe
+Dashboard (Dashboard → Developers → Webhooks → Add endpoint) pointing at
+`https://<your-production-domain>/api/webhooks/stripe` with all 6 event types
+selected. The production signing secret must be set in the hosting platform's
+environment variables (not `.env.local`).
+
+**Steps (from the Stripe Dashboard):**
+
+1. Navigate to Developers → Webhooks → click your endpoint.
+2. Click "Send test webhook" for each of the 6 event types in turn:
+   - `checkout.session.completed`
+   - `checkout.session.async_payment_succeeded`
+   - `checkout.session.async_payment_failed`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `invoice.payment_failed`
+3. For each: verify the delivery log shows HTTP 200.
+4. **Idempotency check:** resend `checkout.session.completed` (click the event in the
+   delivery log → "Resend"). Verify: 200 returned silently (no duplicate `tenants` row).
+5. **Signature rejection check:** temporarily change `STRIPE_WEBHOOK_SIGNING_SECRET`
+   in your hosting platform env to a deliberately wrong value (e.g. `whsec_wrong`).
+   Redeploy. Send any test webhook. Verify the delivery log shows HTTP 400. Restore the
+   correct secret and redeploy.
+
+**Expected outcome (G2):**
+
+- All 6 event types return 200 in the Stripe Dashboard delivery log.
+- Idempotency resend returns 200 silently.
+- Wrong signing secret returns 400.
+
+**Screenshot reference:**
+
+`pocs/screenshots/prd-001-tranche-d-webhook-deliveries.png`
+
+---
+
+## PRD-001 Five operator gate evidences
+
+The following gates were recorded in the run manifest
+(`project-planning/workflow/run-20260515T081454Z.json`):
+
+| Gate | Task | Status | Verified at |
+|------|------|--------|-------------|
+| PRD-001 Tranche A — scaffold migration + iframe smoke | T009 | passed | 2026-05-16 |
+| PRD-001 Tranche B — `stripe listen` + CLI round-trip | T029 | passed | 2026-05-16 |
+| PRD-001 Tranche C — real €0.99 payment (G1) | T040 | passed | 2026-05-17 |
+| PRD-001 Tranche D — Dashboard webhook delivery (G2) | T045 | passed | 2026-05-17 |
+| PRD-001 Tranche E — OSS docs + PR merge (G3) | T052 | pending (operator action) | — |

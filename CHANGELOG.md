@@ -8,6 +8,107 @@ Each PRD prepends a new entry. Do not edit entries below the most recent one.
 
 ---
 
+## [0.2.0] — 2026-05-17 (PRD-001 — Stripe integration)
+
+### Added
+
+- **`StripeProvider`** (`site/src/lib/paywall/providers/StripeProvider.ts`) — first
+  concrete `PaymentProvider` implementation (ADR-0003 ground truth). Orphan recovery
+  with `metadata.app_slug` scoping (ADR-0015). `customer_update: { address: 'auto',
+  name: 'auto' }` for `automatic_tax` compatibility. Versioned idempotency keys via
+  `CHECKOUT_PARAMS_VERSION` constant.
+- **`/api/checkout`** — POST handler with Stripe Customer orphan recovery (ADR-0015),
+  Checkout Session creation (`mode: 'payment'`, one-time €0.99 EUR), and Stripe error
+  translation (FR-2 table). Returns `{ url }` on success or translated error on
+  failure.
+- **`/api/portal`** — 501 stub for PRD-003 Customer Portal wraps. Exists as a
+  forward-compat surface.
+- **`/api/entitlement`** — GET handler with service-role Supabase access. Returns
+  `EntitlementResult` JSON for the polling fallback. **Unauthenticated in v1** (NFR-7);
+  PRD-002 hardens via `host.user.sub` verification.
+- **`/api/webhooks/stripe`** — POST handler with signature verification (400 on bad
+  signature per US-5), `processed_events` idempotency (200 silent on replay), and 6
+  event type handlers: `checkout.session.completed`,
+  `checkout.session.async_payment_succeeded`,
+  `checkout.session.async_payment_failed`, `customer.subscription.updated`,
+  `customer.subscription.deleted`, `invoice.payment_failed`. Unhandled types fall
+  through to 200 silent (FR-5).
+- **`useEntitlement` hook** (`site/src/lib/paywall/hooks/useEntitlement.ts`) —
+  polling primary (3 s × 10 = 30 s cap) + postMessage best-effort sugar (ADR-0014
+  revised). postMessage triggers an immediate poll but does NOT stop polling — only
+  `status === 'allowed'` or timeout stops it. First-signal-wins atomicity via
+  `setState(prev => prev ?? signal)`. Exposed via the public API barrel.
+- **`/paywall-return` page** (`site/app/paywall-return/`) — server shell + client
+  mount handler. Writes `window.opener?.postMessage({ type: 'paywall:refresh' }, origin)`
+  + `sessionStorage` backup signal. Opener-null fall-through shows "You can close
+  this tab" text.
+- **Stripe error-translation table** (`site/src/lib/paywall/stripe-errors.ts`) — maps
+  Stripe `code` + `message` to user-friendly status + message. Catch-all surfaces the
+  underlying Stripe error in the response body for adopter diagnostics.
+- **Build-time env-leak grep test** (`site/scripts/test-stripe-env-leak.sh`,
+  `npm run test:env-leak`) — defense-in-depth verification that `STRIPE_SECRET_KEY`
+  and `STRIPE_WEBHOOK_SIGNING_SECRET` literals do not appear in `.next/static/**/*.js`.
+- **Public IntroPage at `/`** — marketing landing renderable outside the Cloud Portal
+  iframe (no SDK handshake required). Route restructure: `MarketplaceProvider` moved
+  from root layout to `site/app/full-page/layout.tsx` so `/` is unblocked.
+- **`TenantIdBadge` component** on `/full-page` — surfaces live
+  `application.context.marketplaceAppTenantId` with copy button for the seed CLI
+  workflow.
+- **Hahn-Solo branding alignment** with sibling Sitecore.Plugin.* apps — footer logo
+  on every page + cap-logo + author line in README.
+
+### Changed
+
+- Scaffold migrated 4a → 4b in-place via
+  `npx shadcn@latest add quickstart-with-full-stack-xmc.json` (ADR-0013). 74
+  PRD-000 tests preserved through migration.
+- `PaywallCheckoutDialog` primary button is now "Subscribe — €0.99 lifetime" and
+  calls `useEntitlement().triggerCheckout()` (replacing PRD-000 placeholder "Got it"
+  + footnote text). Cancel button stays enabled throughout in-flight checkout (FR-8).
+- `PaywallGate` subscribes to `useEntitlement` and re-evaluates the entitlement store
+  query when the hook resolves to `allowed`.
+- CSP `frame-ancestors` allow-list in `next.config.mjs` includes
+  `https://app.sitecorecloud.io` (the canonical Cloud Portal origin; quickstart
+  default omits it).
+- `next dev` script now includes `--experimental-https` flag (mkcert iframe loop
+  required by Cloud Portal).
+
+### Documented
+
+- 4 new Stripe env vars added to `site/.env.example` with angle-bracket placeholders
+  and server-only annotations.
+- README "Stripe Setup" section — 6-step runbook, env-vars table, test card numbers,
+  Stripe Tax optional subsection.
+- README "Known limitations of v1 / Adopter responsibilities" — 6 entries + idempotency
+  key versioning guidance.
+- `docs/smoke-walkthrough.md` refreshed with PRD-001 Tranche A–D operator walks.
+
+### ADRs
+
+- **ADR-0012** — Stripe Price model: one-time €0.99 EUR (`mode: 'payment'`,
+  `period_end = null` after purchase). Subscription event handlers ship for
+  forward-compat.
+- **ADR-0013** — Scaffold migration 4a → 4b applied in-place.
+- **ADR-0014** — Iframe success-return: polling is primary; postMessage triggers an
+  immediate poll (best-effort sugar); polling-primary revision from original ADR.
+- **ADR-0015** — Stripe Customer orphan recovery with `metadata.app_slug` scoping;
+  multi-candidate handling (sort by created desc, log discards).
+
+### Deferred
+
+- **Stripe SDK type divergence:** `Stripe.Subscription.current_period_end` was removed
+  from `stripe@22.x` TypeScript types but is still present in webhook payloads at
+  runtime. The handler reads it via a typed cast with a type guard. Will resolve when
+  the Stripe SDK corrects the types.
+- **`PaymentProvider.verifyWebhookSignature`** interface declares `Promise<boolean>`;
+  the concrete `StripeProvider` returns `Promise<Stripe.Event>`. `StripeProvider`
+  intentionally omits `implements PaymentProvider` to avoid the type conflict.
+  PRD-003 will reconcile when the second provider lands.
+- **PRD-002** — Per-user seat enforcement; `/api/entitlement` auth hardening.
+- **PRD-003** — Stripe Customer Portal wraps (`/api/portal` is currently a 501 stub).
+
+---
+
 ## [0.1.0] — 2026-05-14 (PRD-000 — Foundation)
 
 ### Added
