@@ -113,6 +113,15 @@
       "outcome": "completed",
       "error": null,
       "notes": "PRD-002 + prd-minimal-002 written. Originally proposed real+fake premium mix with 2 new API routes (/api/activity, /api/payments) and 3 new SDK surfaces. PM critical review (standard rigor) surfaced 3 BLOCKERs + 5 HIGHs + 10 MEDIUMs. Operator post-review direction: 'stick to what we know; fake premium' \u2014 PRD revised to ALL-FAKE premium tier, dropped both new API routes, dropped xmc.authoring.graphql, kept xmc.sites.listSites as the only new SDK call. Net scope shrink ~40%, zero big unknowns. 3 new ADRs (0016 theme toggle visibility, 0017 processed_events tenant_id, 0018 premium fake-data posture)."
+    },
+    {
+      "stage": "architecture_ready",
+      "agent": "04-software-architect",
+      "entered_at": "2026-05-17T23:00:00Z",
+      "exited_at": "2026-05-17T23:30:00Z",
+      "outcome": "completed",
+      "error": null,
+      "notes": "Architecture 653 lines, all 11 sections. SDK contract gate handled inline for xmc.sites.listSites (Mode A wrapped-options, double .data.data unwrap, Xmapp namespace types, contextId guarded-not-cast, .live policy); Tranche A capture gate added. ADR scan: 0 new ADRs proposed; run stays at 3 (0016-0018). 4 risks captured: R-G processed_events.event_type column may not exist (Tranche A inspection gate added); R-K --primary-foreground token pair safety; R-J ThemeToggle hydration mismatch; SDK shape assumption deferred to Tranche A. No infrastructure delta."
     }
   ],
   "implementation": {
