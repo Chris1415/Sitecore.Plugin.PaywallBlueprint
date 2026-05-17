@@ -20,7 +20,7 @@
 
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,22 +43,37 @@ interface PaywallCheckoutDialogProps {
   children: ReactNode;
 }
 
+// Delay between the Stripe tab opening (isLoading → false) and the dialog
+// auto-closing. Gives the user a brief beat to register "checkout opened"
+// instead of the dialog vanishing the instant they click.
+const DIALOG_AUTO_CLOSE_DELAY_MS = 1500;
+
 export function PaywallCheckoutDialog({ children }: PaywallCheckoutDialogProps) {
   const { isLoading, error, triggerCheckout } = useEntitlement();
   const [open, setOpen] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-  // Close the dialog synchronously the moment Subscribe is clicked, then fire
-  // the async triggerCheckout (opens Stripe in a new tab and starts polling).
-  // The user immediately sees the gate underneath instead of a stale dialog.
-  // When polling detects payment success, useEntitlement calls
-  // window.location.reload() — the iframe restarts and the gate re-evaluates
-  // from scratch against the entitlement store. Belt-and-suspenders vs. relying
-  // on the refresh-key bump in PaywallGate (T036) which can race with Radix
-  // portal teardown.
+  // Track Subscribe-button clicks. After triggerCheckout resolves (isLoading
+  // flips back to false), we know either the new tab opened (no error) or
+  // /api/checkout returned an error. In the success case we close the dialog
+  // after a 1.5s beat; in the error case we leave it open so the user sees
+  // the error message.
   const onSubscribe = () => {
-    setOpen(false);
+    setSubmitted(true);
     void triggerCheckout();
   };
+
+  // Auto-close after the Stripe tab opens. The visibility-change listener in
+  // useEntitlement handles the post-payment refresh — whenever the user comes
+  // back to this iframe (browser visibility transition), we poll once and
+  // window.location.reload() if entitlement flipped to 'allowed'.
+  useEffect(() => {
+    if (!submitted) return;
+    if (isLoading) return; // POST still in flight
+    if (error) return; // leave open so error message is visible
+    const timer = setTimeout(() => setOpen(false), DIALOG_AUTO_CLOSE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [submitted, isLoading, error]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

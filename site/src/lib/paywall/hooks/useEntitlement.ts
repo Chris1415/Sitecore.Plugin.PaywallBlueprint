@@ -44,7 +44,7 @@ export interface UseEntitlementReturn {
 // ---------------------------------------------------------------------------
 
 const POLL_INTERVAL_MS = 3000;
-const POLL_TIMEOUT_MS = 30000;
+const POLL_TIMEOUT_MS = 60000; // 60s — bumped from 30s to absorb slow webhook delivery
 const REFRESH_MESSAGE_TYPE = 'paywall:refresh';
 
 // ---------------------------------------------------------------------------
@@ -164,6 +164,29 @@ export function useEntitlement(): UseEntitlementReturn {
       // Network blip — let the next interval poll retry.
     }
   }, [tenantId, resolveSuccess]);
+
+  // -------------------------------------------------------------------------
+  // Visibility-refresh listener — load-bearing for "I paid in another tab and
+  // came back". Stripe's success redirect carries no payload we can trust;
+  // the DB is the source of truth. Fire a poll whenever the iframe becomes
+  // visible. If the post-payment webhook has upserted the tenants row by
+  // then, pollOnce sees status === 'allowed' → resolveSuccess fires
+  // window.location.reload() → gate transitions to AllowedState cleanly.
+  // Independent of the polling state machine in triggerCheckout, so it works
+  // even after the 60s polling window has elapsed AND even if Subscribe was
+  // never clicked in this iframe instance (e.g., user paid in a previous
+  // session and just navigated back).
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    if (!tenantId) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void pollOnce();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [tenantId, pollOnce]);
 
   // -------------------------------------------------------------------------
   // triggerCheckout — the main public API
