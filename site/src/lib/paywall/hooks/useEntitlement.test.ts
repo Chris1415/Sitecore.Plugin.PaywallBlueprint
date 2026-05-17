@@ -119,8 +119,10 @@ describe('useEntitlement — T031 — polling happy path', () => {
 // T032 — Timeout path: 30s / 10 polls, no 'allowed' ever
 // ---------------------------------------------------------------------------
 
-describe('useEntitlement — T032 — 30s polling timeout', () => {
-  it('surfaces polling_timeout error after 30s; clears interval', async () => {
+describe('useEntitlement — T032 — polling timeout', () => {
+  // Polling cap bumped from 30s to 60s in 2026-05-17 fix to absorb slow webhook
+  // delivery. Test advances past 60s to verify timeout fires.
+  it('surfaces polling_timeout error after the timeout cap; clears interval', async () => {
     const fetchMock = vi.fn()
       .mockImplementationOnce(() => makeCheckoutResponse())
       .mockImplementation(() => makeEntitlementResponse('tenant_no_subscription'));
@@ -132,9 +134,9 @@ describe('useEntitlement — T032 — 30s polling timeout', () => {
       await result.current.triggerCheckout();
     });
 
-    // Advance past 30s timeout
+    // Advance past 60s timeout cap
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(31000);
+      await vi.advanceTimersByTimeAsync(61000);
     });
 
     expect(result.current.error?.kind).toBe('polling_timeout');
