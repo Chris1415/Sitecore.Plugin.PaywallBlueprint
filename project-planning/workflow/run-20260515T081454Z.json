@@ -2,7 +2,7 @@
   "schema_version": 6,
   "run_id": "20260515T081454Z",
   "created_at": "2026-05-15T08:14:54Z",
-  "updated_at": "2026-05-17T08:00:00Z",
+  "updated_at": "2026-05-17T10:00:00Z",
   "product_slug": "paywall-blueprint",
   "product_root": "products/paywall-blueprint",
   "status": "implementing",
@@ -196,6 +196,15 @@
       "outcome": "pass",
       "error": null,
       "notes": "**G1 SUCCESS CRITERION MET.** Operator T040 real-money smoke PASS \u2014 paid \u20ac0.99 with 4242 4242 4242 4242 inside the Cloud Portal iframe; Stripe Checkout opened in new tab; address field captured; Stripe redirected to /paywall-return; iframe auto-refreshed to AllowedState welcome card. Two Stripe-API traps surfaced and fixed mid-smoke: (1) `customer_tax_location_invalid` \u2192 fixed by adding `customer_update: { address: 'auto', name: 'auto' }` to SessionCreateParams (commit 933978d); (2) idempotency-key params drift after the first fix \u2192 versioned the key as `${tenantId}:${CHECKOUT_PARAMS_VERSION}` starting at v2 (commit 3dab67e). Both fixes captured to memory for future Marketplace apps. Error-translation catch-all improved to surface real Stripe code+message in dialog so future unmapped errors are self-diagnosing. Ready for Tranche D (T041\u2013T045 forward-compat webhook handlers + real Stripe Dashboard endpoint; G2 gate at T045)."
+    },
+    {
+      "stage": "implemented_tranche_d",
+      "agent": "08-developer",
+      "entered_at": "2026-05-17T08:30:00Z",
+      "exited_at": "2026-05-17T10:00:00Z",
+      "outcome": "completed",
+      "error": null,
+      "notes": "Tranche D T041\u2013T043 complete. 2 commits. RED\u2192GREEN confirmed for all 5 new handlers (T042a\u2013T042e \u2192 T041). 5 new tests; total 99\u2192104 PASS. Gates green: lint (0 errors, 11 warnings), typecheck, test, build (all 6 routes), test:env-leak, test:dce (PRD-000 tree-shaking contract carries through 4b). Working tree clean. Commits: 19f21da (T042 RED tests for 5 handlers) 60021bc (T041 dispatch extension). SDK divergence captured: `Stripe.Subscription.current_period_end` was removed from the `stripe@22.x` TypeScript type but the field is still sent in webhook payloads at runtime; handler reads via `unknown as Record<string, unknown>` cast with type guard. Memory saved at reference_stripe_subscription_current_period_end_type_removed.md. T044 (create real Stripe Dashboard webhook endpoint) and T045 (G2 gate: Send test webhook for all 6 event types) are operator actions \u2014 STOPS here."
     }
   ],
   "implementation": {
