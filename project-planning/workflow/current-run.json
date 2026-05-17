@@ -2,7 +2,7 @@
   "schema_version": 6,
   "run_id": "20260515T081454Z",
   "created_at": "2026-05-15T08:14:54Z",
-  "updated_at": "2026-05-17T12:30:00Z",
+  "updated_at": "2026-05-17T14:00:00Z",
   "product_slug": "paywall-blueprint",
   "product_root": "products/paywall-blueprint",
   "status": "implementing",
@@ -223,6 +223,15 @@
       "outcome": "pass",
       "error": null,
       "notes": "**G2 SUCCESS CRITERION MET.** T045 against production webhook destination (\"fascinating-breeze\" at https://sitecore-plugin-paywall-blueprint.vercel.app/api/webhooks/stripe): all 6 event types delivered 200 (visible in Stripe sandbox dashboard); idempotency-resend returned 200 silent; signature mismatch returned 400 (operator confirmed: 'changing ids or key lead to errors'). Ready for Tranche E (T046\u2013T052: README Stripe Setup section, README Known limitations, CHANGELOG [0.2.0], smoke walkthrough refresh, final regression sweep, docs PR merge for G3)."
+    },
+    {
+      "stage": "implemented_tranche_e",
+      "agent": "08-developer",
+      "entered_at": "2026-05-17T12:30:00Z",
+      "exited_at": "2026-05-17T14:00:00Z",
+      "outcome": "completed",
+      "error": null,
+      "notes": "Tranche E T046\u2013T050 complete. 4 commits on prd-001-docs branch. README expanded with Stripe Setup (6-step runbook + env-vars table + test cards + Stripe Tax subsection) and Known limitations (6 entries + idempotency key versioning guidance). CHANGELOG [0.2.0] entry prepended. docs/smoke-walkthrough.md refreshed with PRD-001 Tranche A\u2013D walks + ASCII flow diagram for Tranche C. All 5 captured Stripe traps documented in README/CHANGELOG so adopters don't need to read memory entries. Optional types.ts cleanup partially applied: verifyWebhookSignature return type changed Promise<boolean> \u2192 Promise<unknown>; didn't add `implements PaymentProvider` because parseWebhookPayload signature also diverges (deferred to PRD-003 with the second provider). Gates green: lint (0 errors, 11 warnings pre-existing), typecheck, test (104/104; one test flaked on first run then stable), test:dce, test:env-leak, build. Commits: 9dd34c8 (T046+T047), 6e660b3 (T048), 33f998a (T049), 79940b6 (types.ts cleanup). T051 (operator opens PR) + T052 (operator merges \u2192 G3 ship gate) are next."
     }
   ],
   "implementation": {
