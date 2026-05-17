@@ -23,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { FreeSection } from "@/components/free-section";
 import { GatedSectionWithDevPicker } from "@/components/gated-section-with-dev-picker";
 import { TenantIdBadge } from "@/components/tenant-id-badge";
+import { PaywallVersionOverride } from "@/components/paywall-version-override";
 import { DemoModeBanner } from "@/src/lib/paywall/DemoModeBanner";
 import {
   isValidPreviewState,
@@ -63,6 +64,11 @@ export default async function FullPage({ searchParams }: PageProps) {
         {/* Developer/operator aid: live tenantId for the seed CLI. */}
         {/* Renders only when SDK context has resolved; safe in prod (tenantId is in iframe URL anyway). */}
         <TenantIdBadge />
+
+        {/* Operator-facing idempotency-key version override (UI tier).
+            Three-tier precedence: UI > env (STRIPE_CHECKOUT_PARAMS_VERSION) > code default.
+            See StripeProvider.ts JSDoc. Safe to leave in prod — adopters who fork can remove. */}
+        <PaywallVersionOverride />
 
         {/* Free section — OUTSIDE ErrorBoundary; always renders even when gate throws (NFR-6) */}
         <FreeSection />
