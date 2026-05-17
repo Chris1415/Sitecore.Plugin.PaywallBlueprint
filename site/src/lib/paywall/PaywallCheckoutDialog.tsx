@@ -20,7 +20,7 @@
 
 "use client";
 
-import { type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,10 +44,23 @@ interface PaywallCheckoutDialogProps {
 }
 
 export function PaywallCheckoutDialog({ children }: PaywallCheckoutDialogProps) {
-  const { isLoading, error, triggerCheckout } = useEntitlement();
+  const { entitlement, isLoading, error, triggerCheckout } = useEntitlement();
+  const [open, setOpen] = useState(false);
+
+  // Auto-close on payment success. The polling state machine in useEntitlement
+  // sets `entitlement` to { status: 'allowed' } when the post-payment poll
+  // succeeds (either via the postMessage immediate-poll from /paywall-return or
+  // via the 3s interval). Closing the dialog removes the visual blocker so the
+  // user sees the AllowedState that PaywallGate has already transitioned to
+  // through its own useEntitlement subscription (T036).
+  useEffect(() => {
+    if (entitlement?.status === "allowed") {
+      setOpen(false);
+    }
+  }, [entitlement?.status]);
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
