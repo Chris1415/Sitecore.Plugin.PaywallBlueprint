@@ -1,0 +1,1141 @@
+/* =============================================================
+ * Paywall Blueprint POC — v1 "Mosaic Discipline" — PRD-002
+ *
+ * Token source: Blok semantic tokens (Sitecore design system) /
+ *               Tailwind v4 Nova preset HSL triplets.
+ *   reference: blok-theming skill, captured 2026-05-15
+ *   reference URL: https://blok.sitecore.com/theming
+ *   continuity: token values match products/paywall-blueprint/
+ *               pocs/poc-v1-prd000/styles.css (same Nova snapshot)
+ *
+ * Strategy: copied-tokens fallback (no public Blok theme CDN
+ * documented by the skill at capture time). All component code
+ * uses hsl(var(--token)) — no hex literals outside :root.
+ * Dark mode flips via [data-theme="dark"] on <html>; "system"
+ * resolves via prefers-color-scheme media query.
+ * ============================================================= */
+
+:root {
+  /* Color tokens (Nova preset light) — HSL triplets per shadcn convention */
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 240 5.9% 10%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 240 5.9% 10%;
+
+  /* Radius scale */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* Spacing scale (Tailwind v4 / Nova) */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Geist Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Geist Mono",
+    monospace;
+}
+
+/* Dark mode tokens — flipped via [data-theme="dark"] OR system pref */
+html[data-theme="dark"] {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 6% 7%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 240 5.9% 10%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 240 4.9% 83.9%;
+}
+
+/* System theme — follow OS preference */
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"] {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 6% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+/* =============================================================
+ * Base
+ * ============================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =============================================================
+ * POC-only state + theme picker (NOT shipping)
+ * ============================================================= */
+
+.poc-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
+  align-items: center;
+  padding: var(--spacing-3) var(--spacing-6);
+  border-bottom: 1px dashed hsl(var(--border));
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
+
+.poc-picker__group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.poc-picker__label {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10px;
+}
+
+.poc-picker__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease,
+    color 120ms ease;
+}
+
+.poc-picker__btn:hover {
+  border-color: hsl(var(--ring));
+}
+
+.poc-picker__btn[aria-pressed="true"],
+.poc-picker__btn.theme-toggle-btn--active,
+.poc-picker__btn.state-toggle--active {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--background));
+  border-color: hsl(var(--primary));
+}
+
+.poc-picker__icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* =============================================================
+ * @blok/topbar — extended w/ ThemeToggle (ADR-0016)
+ * ============================================================= */
+
+.blok-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 var(--spacing-6);
+  border-bottom: 1px solid hsl(var(--border));
+  background-color: hsl(var(--background));
+}
+
+.blok-topbar__brand {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+}
+
+.blok-topbar__right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.blok-topbar__strip {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.blok-topbar__theme-toggle {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+/* =============================================================
+ * Page shell
+ * ============================================================= */
+
+.page-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--spacing-8) var(--spacing-6);
+}
+
+/* =============================================================
+ * BentoGrid — 3 × 4 fixed grid (Mosaic Discipline)
+ * ============================================================= */
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(180px, auto);
+  gap: var(--spacing-4);
+  position: relative;
+}
+
+.bento-grid__premium-region {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(180px, auto);
+  gap: var(--spacing-4);
+  position: relative;
+  transition: filter 400ms ease, opacity 400ms ease;
+}
+
+.bento-spacer {
+  /* Intentional empty cell — row 2 col 3 in unlocked state.
+   * In locked state the Subscribe banner overlays rows 3+4, so this
+   * cell stays empty regardless of state. (See spec § 6.) */
+}
+
+/* =============================================================
+ * @blok/card — primitive anatomy
+ * ============================================================= */
+
+.blok-card {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-6);
+  box-shadow: 0 1px 2px 0 hsl(0 0% 0% / 0.05); /* shadow-sm — iframe-safe */
+}
+
+.bento-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* CSS Grid min-width trap mitigation */
+  overflow: hidden;
+}
+
+/* =============================================================
+ * Common card interior typography helpers
+ * ============================================================= */
+
+.bento-card__icon-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-3);
+  color: hsl(var(--muted-foreground));
+  flex-wrap: wrap;
+}
+
+.bento-card__icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.bento-card__icon-label {
+  font-size: 14px;
+  color: hsl(var(--muted-foreground));
+}
+
+.bento-card__icon-suffix {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  opacity: 0.7;
+}
+
+.bento-card__body-text {
+  margin: var(--spacing-2) 0 0;
+  font-size: 14px;
+  color: hsl(var(--foreground));
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.bento-card__muted-text {
+  margin: var(--spacing-1) 0 0;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+
+.bento-card__muted {
+  color: hsl(var(--muted-foreground));
+}
+
+/* =============================================================
+ * F1 WelcomeHero
+ * ============================================================= */
+
+.bento-card__welcome-prefix {
+  font-size: 14px;
+  color: hsl(var(--muted-foreground));
+}
+
+.bento-card__hero-name {
+  margin: var(--spacing-2) 0 0;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: hsl(var(--foreground));
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.bento-card__hero-tenant {
+  margin: var(--spacing-1) 0 0;
+  font-size: 16px;
+  color: hsl(var(--foreground));
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.bento-card__plan-badge {
+  position: absolute;
+  top: var(--spacing-4);
+  right: var(--spacing-4);
+}
+
+/* =============================================================
+ * F2 SitesTile
+ * ============================================================= */
+
+.bento-card__kpi-large {
+  margin: var(--spacing-2) 0 var(--spacing-2);
+  font-family: var(--font-mono);
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1;
+  color: hsl(var(--foreground));
+}
+
+.bento-card__site-list {
+  margin: 0;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* =============================================================
+ * F3 PlanCard
+ * ============================================================= */
+
+.bento-card__plan-pill {
+  align-self: flex-start;
+  margin-bottom: var(--spacing-2);
+}
+
+/* =============================================================
+ * F4 RecentActivity
+ * ============================================================= */
+
+.bento-card__activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bento-card__activity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: 8px 0;
+  border-bottom: 1px solid hsl(var(--border));
+  min-width: 0;
+}
+
+.bento-card__activity-row:last-child {
+  border-bottom: 0;
+}
+
+.bento-card__activity-event {
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  font-family: var(--font-mono);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bento-card__activity-time {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  flex-shrink: 0;
+}
+
+/* =============================================================
+ * F5 ExtensionPointsCard
+ * ============================================================= */
+
+.bento-card__chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+/* =============================================================
+ * @blok/badge anatomy
+ * ============================================================= */
+
+.blok-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.blok-badge--outline {
+  background-color: transparent;
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+}
+
+.blok-badge--default {
+  background-color: hsl(var(--primary));
+  /* Use --background fallback for foreground to dodge Nova-preset
+   * --primary-foreground collapse in dark mode (per blok-theming skill). */
+  color: hsl(var(--background));
+}
+
+.blok-badge--secondary {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+/* =============================================================
+ * @blok/button anatomy
+ * ============================================================= */
+
+.blok-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 120ms ease, border-color 120ms ease,
+    color 120ms ease, box-shadow 120ms ease;
+}
+
+.blok-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--ring));
+}
+
+.blok-button--default {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--background));
+}
+
+.blok-button--default:hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
+
+.blok-button--ghost {
+  background-color: transparent;
+  color: hsl(var(--foreground));
+}
+
+.blok-button--ghost:hover {
+  background-color: hsl(var(--muted));
+}
+
+.blok-button--lg {
+  height: 44px;
+  padding: 0 24px;
+  font-size: 15px;
+}
+
+.blok-button__leading-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* =============================================================
+ * Premium cards — uniform interior + corner badge
+ * ============================================================= */
+
+.bento-card--premium {
+  /* Position relative is on .bento-card already */
+}
+
+.bento-card__premium-corner {
+  position: absolute;
+  top: var(--spacing-3);
+  right: var(--spacing-3);
+  z-index: 2;
+}
+
+/* =============================================================
+ * P1 ActivityChart
+ * ============================================================= */
+
+.bento-card__chart {
+  display: block;
+  width: 100%;
+  height: 140px;
+  margin-top: auto;
+  color: hsl(var(--primary)); /* drives currentColor in fill/stroke */
+}
+
+.bento-card__chart-stroke {
+  stroke: currentColor;
+}
+
+/* =============================================================
+ * P2 ContentHealth — @blok/progress anatomy
+ * ============================================================= */
+
+.bento-card__health-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-3);
+}
+
+.bento-card__health-row:first-of-type {
+  margin-top: var(--spacing-2);
+}
+
+.bento-card__health-label {
+  font-size: 13px;
+  color: hsl(var(--foreground));
+}
+
+.bento-card__health-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: hsl(var(--foreground));
+}
+
+.blok-progress {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 9999px;
+  background-color: hsl(var(--muted));
+  overflow: hidden;
+}
+
+.blok-progress__fill {
+  height: 100%;
+  background-color: hsl(var(--primary));
+  border-radius: 9999px;
+  transform-origin: left center;
+  /* Initial state for unlock animation — JS overwrites */
+  transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* When unlocked, animate from 0 — JS adds .blok-progress--animating */
+body[data-state="locked"] .blok-progress__fill {
+  /* No-op: locked region is blurred anyway */
+}
+
+/* =============================================================
+ * P3 RecentEdits
+ * ============================================================= */
+
+.bento-card__edits-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.bento-card__edit-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  min-width: 0;
+}
+
+.bento-card__avatar {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+}
+
+.bento-card__edit-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bento-card__edit-primary {
+  margin: 0;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bento-card__edit-meta {
+  margin: 0;
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+}
+
+/* =============================================================
+ * P4 EngagementMetrics — 2x2 KPI grid
+ * ============================================================= */
+
+.bento-card__kpi-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-3);
+}
+
+.bento-card__kpi-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  background-color: hsl(var(--muted) / 0.4);
+}
+
+.bento-card__kpi-label {
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.bento-card__kpi-value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin: 0;
+  line-height: 1.1;
+}
+
+/* =============================================================
+ * P5 AIInsights
+ * ============================================================= */
+
+.bento-card__insight-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bento-card__insight-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) 0;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.bento-card__insight-row:last-child {
+  border-bottom: 0;
+}
+
+.bento-card__insight-dot {
+  flex-shrink: 0;
+  margin-top: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: hsl(var(--primary));
+}
+
+.bento-card__insight-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: hsl(var(--foreground));
+}
+
+/* =============================================================
+ * P6 EngagementScore — ring + sparkline
+ * ============================================================= */
+
+.bento-card__score-split {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-2);
+}
+
+.bento-card__score-ring {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+}
+
+.bento-card__score-ring svg {
+  width: 96px;
+  height: 96px;
+}
+
+.bento-card__score-track {
+  stroke: hsl(var(--muted));
+}
+
+.bento-card__score-arc {
+  --circumference: 201.06; /* 2 * PI * 32 */
+  stroke: hsl(var(--primary));
+  stroke-dasharray: var(--circumference);
+  /* 87% of 201.06 ≈ 174.92 visible, so offset = 201.06 - 174.92 ≈ 26.14 */
+  stroke-dashoffset: 26;
+  transition: stroke-dashoffset 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bento-card__score-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+}
+
+.bento-card__score-num {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  line-height: 1;
+}
+
+.bento-card__score-of {
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+}
+
+.bento-card__sparkline {
+  width: 100%;
+  height: 60px;
+  color: hsl(var(--primary));
+  flex: 1;
+  min-width: 0;
+}
+
+/* =============================================================
+ * Locked state — premium-region blur + shimmer wrapper
+ * ============================================================= */
+
+body[data-state="locked"] .bento-grid__premium-region {
+  filter: blur(12px) opacity(0.7);
+  pointer-events: none;
+}
+
+body[data-state="locked"] .bento-grid__premium-region::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--muted) / 0.12) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* =============================================================
+ * Subscribe banner — locked state only
+ *
+ * Anchor strategy: The .bento-grid is `position: relative` (default
+ * on grid? — explicitly enforced below). The .bento-grid__premium-region
+ * is the last grid child spanning all columns, so it naturally occupies
+ * the bottom of the grid. The Subscribe banner is an absolutely-positioned
+ * sibling that anchors to .bento-grid__premium-region's bounding box
+ * using JS-set offset (script.js measures the region on resize and sets
+ * --subscribe-banner-top + --subscribe-banner-height CSS vars).
+ *
+ * Fallback if JS disabled: banner pins to bottom half of grid.
+ * ============================================================= */
+
+.bento-grid {
+  position: relative; /* anchor for subscribe banner */
+}
+
+.subscribe-banner {
+  display: none; /* hidden in unlocked */
+}
+
+body[data-state="locked"] .subscribe-banner {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* JS sets these vars to align with .bento-grid__premium-region. */
+  top: var(--subscribe-banner-top, 50%);
+  height: var(--subscribe-banner-height, 50%);
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.subscribe-banner__card {
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-8);
+  /* The accent ring + slightly elevated shadow — only place in the
+   * bento that uses shadow-md per spec. */
+  box-shadow: 0 4px 12px -4px hsl(0 0% 0% / 0.15),
+    0 0 0 2px hsl(var(--primary)); /* ring-2 ring-primary via outer ring */
+}
+
+html[data-theme="dark"] .subscribe-banner__card {
+  box-shadow: 0 4px 12px -4px hsl(0 0% 0% / 0.4),
+    0 0 0 2px hsl(var(--primary)),
+    0 0 24px -4px hsl(var(--primary) / 0.4); /* subtle outer glow in dark */
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"] .subscribe-banner__card {
+    box-shadow: 0 4px 12px -4px hsl(0 0% 0% / 0.4),
+      0 0 0 2px hsl(var(--primary)),
+      0 0 24px -4px hsl(var(--primary) / 0.4);
+  }
+}
+
+.subscribe-banner__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: hsl(var(--foreground));
+  line-height: 1.25;
+}
+
+.subscribe-banner__subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.5;
+  max-width: 40ch;
+}
+
+/* =============================================================
+ * Unlocked state — stagger-in cascade
+ * Spec § 7-Unlocked: 0/80/160/240/320/400ms delays.
+ * DOM order = reading order = stagger order.
+ * ============================================================= */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body[data-state="unlocked"] .bento-grid__premium-region > .bento-card--premium {
+  animation: fadeUp 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+body[data-state="unlocked"]
+  .bento-grid__premium-region
+  > .bento-card--premium:nth-of-type(1) {
+  animation-delay: 0ms;
+}
+body[data-state="unlocked"]
+  .bento-grid__premium-region
+  > .bento-card--premium:nth-of-type(2) {
+  animation-delay: 80ms;
+}
+body[data-state="unlocked"]
+  .bento-grid__premium-region
+  > .bento-card--premium:nth-of-type(3) {
+  animation-delay: 160ms;
+}
+body[data-state="unlocked"]
+  .bento-grid__premium-region
+  > .bento-card--premium:nth-of-type(4) {
+  animation-delay: 240ms;
+}
+body[data-state="unlocked"]
+  .bento-grid__premium-region
+  > .bento-card--premium:nth-of-type(5) {
+  animation-delay: 320ms;
+}
+body[data-state="unlocked"]
+  .bento-grid__premium-region
+  > .bento-card--premium:nth-of-type(6) {
+  animation-delay: 400ms;
+}
+
+/* Hide Premium corner badges in unlocked state — they only exist
+ * to call out the locked silhouettes. */
+body[data-state="unlocked"] .bento-card__premium-corner {
+  display: none;
+}
+
+/* =============================================================
+ * Reduced motion — disable all keyframe + transition animation
+ * ============================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-state="locked"] .bento-grid__premium-region::before {
+    animation: none;
+  }
+  body[data-state="unlocked"]
+    .bento-grid__premium-region
+    > .bento-card--premium {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .blok-progress__fill,
+  .bento-card__score-arc {
+    transition: none;
+  }
+}
+
+/* =============================================================
+ * Responsive — tablet 768-1023px → 2 columns
+ * ============================================================= */
+
+@media (max-width: 1023.98px) and (min-width: 768px) {
+  .bento-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bento-grid__premium-region {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bento-spacer {
+    display: none;
+  }
+}
+
+/* =============================================================
+ * Responsive — mobile <768px → single column
+ * ============================================================= */
+
+@media (max-width: 767.98px) {
+  .blok-topbar {
+    padding: 0 var(--spacing-4);
+  }
+  .blok-topbar__strip {
+    display: none; /* hide dev affordances at small viewport */
+  }
+  .page-shell {
+    padding: var(--spacing-4);
+  }
+  .bento-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-3);
+  }
+  .bento-grid__premium-region {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-3);
+  }
+  .bento-spacer {
+    display: none;
+  }
+  body[data-state="locked"] .subscribe-banner {
+    /* JS still positions vertically via --subscribe-banner-top/height vars */
+    left: var(--spacing-4);
+    right: var(--spacing-4);
+  }
+  .subscribe-banner__card {
+    width: 100%;
+    padding: var(--spacing-6);
+  }
+  .subscribe-banner__title {
+    font-size: 18px;
+  }
+  .blok-button--default {
+    width: 100%;
+  }
+  .bento-card__chart {
+    height: 100px;
+  }
+  .bento-card__score-split {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .bento-card__sparkline {
+    width: 100%;
+  }
+  .poc-picker {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: 11px;
+  }
+  .poc-picker__btn {
+    height: 24px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+}
+
+/* =============================================================
+ * Focus rings — visible in both themes (Blok semantic)
+ * ============================================================= */
+
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--ring));
+}

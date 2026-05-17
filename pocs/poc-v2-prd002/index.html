@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en" data-theme="system">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Paywall Blueprint — Editorial Cadence (POC v2)</title>
+    <meta name="description" content="POC clickdummy for paywall-blueprint PRD-002 Variant 2 — Editorial Cadence (4-column asymmetric masonry bento)." />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="script.js"></script>
+  </head>
+  <body class="locked">
+    <!-- ============================================================
+         Topbar (@blok/topbar)
+         ============================================================ -->
+    <header class="blok-topbar" role="banner">
+      <div class="blok-topbar__brand">
+        <span class="blok-topbar__brand-mark" aria-hidden="true">P</span>
+        <span>Paywall Blueprint</span>
+      </div>
+      <div class="blok-topbar__right">
+        <!-- POC-only state toggle (the real app drives this via useEntitlement) -->
+        <button
+          type="button"
+          class="state-toggle"
+          data-current="locked"
+          aria-label="Toggle entitlement state — POC only"
+          title="POC affordance — toggles locked / unlocked. The real app reads useEntitlement."
+        >
+          STATE: locked — preview unlocked →
+        </button>
+
+        <!-- TenantIdBadge — placeholder strip (dev affordance) -->
+        <span class="dev-strip" title="Tenant ID — dev affordance">
+          <span class="dev-strip__label">tenant</span>
+          <span>0d4b…a91c</span>
+        </span>
+
+        <!-- PaywallVersionOverride — placeholder strip (dev affordance) -->
+        <span class="dev-strip" title="Paywall version override — dev affordance">
+          <span class="dev-strip__label">v</span>
+          <span>0.3.0</span>
+        </span>
+
+        <!-- Theme toggle (@blok/dropdown shape) -->
+        <div class="theme-toggle" data-open="false">
+          <button
+            type="button"
+            class="theme-toggle__trigger"
+            aria-haspopup="menu"
+            aria-label="Toggle theme"
+          >
+            <!-- Sun icon (light theme) -->
+            <svg class="icon icon--lg theme-toggle__icon theme-toggle__icon--light" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+            </svg>
+            <!-- Moon icon (dark theme) -->
+            <svg class="icon icon--lg theme-toggle__icon theme-toggle__icon--dark" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <!-- Monitor icon (system theme) -->
+            <svg class="icon icon--lg theme-toggle__icon theme-toggle__icon--system" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+              <path d="M8 21h8M12 17v4"></path>
+            </svg>
+          </button>
+
+          <div class="theme-toggle__menu" role="menu">
+            <button type="button" class="theme-toggle__item" role="menuitemradio" data-mode="light" aria-checked="false">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="4"></circle>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+              </svg>
+              Light
+              <span class="theme-toggle__item-check" aria-hidden="true">✓</span>
+            </button>
+            <button type="button" class="theme-toggle__item" role="menuitemradio" data-mode="dark" aria-checked="false">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+              Dark
+              <span class="theme-toggle__item-check" aria-hidden="true">✓</span>
+            </button>
+            <button type="button" class="theme-toggle__item" role="menuitemradio" data-mode="system" aria-checked="true">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                <path d="M8 21h8M12 17v4"></path>
+              </svg>
+              System
+              <span class="theme-toggle__item-check" aria-hidden="true">✓</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================
+         Bento grid — 11 cards in DOM=reading order.
+         Reading order: F1 → F2 → F3 → F4 → F5 → (premium region: P1 → P2 → P3 → P4 → P5 → P6)
+         ============================================================ -->
+    <main>
+      <div class="bento-grid">
+        <!-- ============ F1 — WelcomeHero (HERO, 2x2) ============ -->
+        <section
+          class="blok-card blok-card--hero welcome-hero"
+          data-card="f1"
+          aria-labelledby="f1-title"
+        >
+          <div>
+            <h1 class="welcome-hero__greeting" id="f1-title">
+              Welcome, Christian.
+            </h1>
+            <p class="welcome-hero__tenant">Hahn-Solo Demo Tenant</p>
+          </div>
+          <hr class="blok-separator" />
+          <div class="welcome-hero__footer">
+            <span class="blok-badge blok-badge--secondary" id="f1-plan-badge">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+              </svg>
+              Free plan
+            </span>
+            <span class="welcome-hero__footer-meta">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>christian@hahn-solo.net</span>
+            </span>
+          </div>
+        </section>
+
+        <!-- ============ F2 — SitesTile (support) ============ -->
+        <section class="blok-card" data-card="f2" aria-labelledby="f2-title">
+          <div class="blok-card__title">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            <span class="blok-card__title-label" id="f2-title">Sites</span>
+          </div>
+          <div class="sites-tile__count">3</div>
+          <ul class="sites-tile__list">
+            <li>Paywall Blueprint Test Site</li>
+            <li>Hahn-Solo Demo Site</li>
+            <li class="sites-tile__more">…and 1 more</li>
+          </ul>
+        </section>
+
+        <!-- ============ F3 — PlanCard (support) ============ -->
+        <section class="blok-card" data-card="f3" aria-labelledby="f3-title">
+          <span class="blok-card__title-label" id="f3-title">Plan</span>
+          <div class="plan-card__name">Free</div>
+          <hr class="blok-separator" />
+          <div class="plan-card__since">Member since May 17, 2026</div>
+          <div class="plan-card__footer">
+            <span class="blok-badge">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 6L9 17l-5-5"></path>
+              </svg>
+              Active
+            </span>
+          </div>
+        </section>
+
+        <!-- ============ F4 — RecentActivity (medium, 2-col) ============ -->
+        <section class="blok-card" data-card="f4" aria-labelledby="f4-title">
+          <div class="blok-card__title" id="f4-title">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            Recent activity
+          </div>
+          <ul class="recent-activity__list">
+            <li class="recent-activity__row">
+              <span class="recent-activity__icon">
+                <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9 12l2 2 4-4"></path>
+                </svg>
+              </span>
+              <span class="recent-activity__label">checkout.session.completed</span>
+              <span class="recent-activity__time">3 min ago</span>
+            </li>
+            <li class="recent-activity__row">
+              <span class="recent-activity__icon">
+                <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 19l-7-7 7-7M5 12h14"></path>
+                </svg>
+              </span>
+              <span class="recent-activity__label">customer.subscription.updated</span>
+              <span class="recent-activity__time">2 hours ago</span>
+            </li>
+            <li class="recent-activity__row">
+              <span class="recent-activity__icon">
+                <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                </svg>
+              </span>
+              <span class="recent-activity__label">app.context.refreshed</span>
+              <span class="recent-activity__time">Yesterday</span>
+            </li>
+            <li class="recent-activity__row">
+              <span class="recent-activity__icon">
+                <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9 12l2 2 4-4"></path>
+                </svg>
+              </span>
+              <span class="recent-activity__label">invoice.payment_succeeded</span>
+              <span class="recent-activity__time">2 days ago</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ============ F5 — ExtensionPointsCard (wide strip) ============ -->
+        <section class="blok-card extension-points" data-card="f5" aria-labelledby="f5-title">
+          <div class="extension-points__header" id="f5-title">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 2v6M15 2v6M12 22a8 8 0 0 0 8-8v-4H4v4a8 8 0 0 0 8 8z"></path>
+            </svg>
+            Available extension points
+            <span class="extension-points__count">· 1 registered</span>
+          </div>
+          <div class="extension-points__chips">
+            <span class="blok-badge">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <path d="M9 9h6v6H9z"></path>
+              </svg>
+              xmc:fullscreen
+            </span>
+            <span class="blok-badge">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+              </svg>
+              xmc:dashboard.widget
+            </span>
+            <span class="blok-badge">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                <path d="M3 10h18"></path>
+              </svg>
+              pages:custom-field
+            </span>
+            <span class="blok-badge">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M8 12h8M12 8v8"></path>
+              </svg>
+              pages:context-panel
+            </span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             Premium region wrapper (rows 4–6)
+             aria-hidden flips on state change via JS.
+             ============================================================ -->
+        <div class="premium-region" aria-hidden="true">
+
+          <!-- ============ P1 — ActivityChart (HERO) ============ -->
+          <section class="blok-card blok-card--hero" data-card="p1" aria-labelledby="p1-title">
+            <span class="premium-corner-badge blok-badge blok-badge--primary">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Premium
+            </span>
+            <div class="premium-content" style="display:flex; flex-direction:column; gap: var(--spacing-3); flex:1; min-height:0;">
+              <div class="blok-card__header">
+                <div class="blok-card__title" id="p1-title">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M23 6l-9.5 9.5-5-5L1 18"></path>
+                    <path d="M17 6h6v6"></path>
+                  </svg>
+                  30-day activity
+                </div>
+                <span class="blok-badge blok-badge--primary">+12% vs prev</span>
+              </div>
+              <!-- Inline SVG area chart — 30 believable daily counts -->
+              <svg class="activity-chart__svg" viewBox="0 0 600 200" preserveAspectRatio="none" role="img" aria-label="30-day activity area chart">
+                <!-- Grid lines -->
+                <line class="grid-line" x1="0"  y1="50"  x2="600" y2="50"></line>
+                <line class="grid-line" x1="0"  y1="100" x2="600" y2="100"></line>
+                <line class="grid-line" x1="0"  y1="150" x2="600" y2="150"></line>
+                <!-- Area fill -->
+                <path
+                  class="area-fill"
+                  d="
+                    M 0,160
+                    L 0,140 L 20,120 L 40,128 L 60,98 L 80,90 L 100,108 L 120,82 L 140,76
+                    L 160,92 L 180,68 L 200,74 L 220,52 L 240,60 L 260,38 L 280,42 L 300,66
+                    L 320,58 L 340,46 L 360,30 L 380,42 L 400,38 L 420,22 L 440,32 L 460,28
+                    L 480,52 L 500,46 L 520,26 L 540,18 L 560,28 L 580,14 L 600,22
+                    L 600,200 L 0,200 Z
+                  "
+                ></path>
+                <!-- Stroke on top -->
+                <path
+                  class="area-stroke"
+                  d="
+                    M 0,140 L 20,120 L 40,128 L 60,98 L 80,90 L 100,108 L 120,82 L 140,76
+                    L 160,92 L 180,68 L 200,74 L 220,52 L 240,60 L 260,38 L 280,42 L 300,66
+                    L 320,58 L 340,46 L 360,30 L 380,42 L 400,38 L 420,22 L 440,32 L 460,28
+                    L 480,52 L 500,46 L 520,26 L 540,18 L 560,28 L 580,14 L 600,22
+                  "
+                ></path>
+                <!-- Axis ticks -->
+                <text class="axis-tick" x="0"   y="195">May 1</text>
+                <text class="axis-tick" x="180" y="195">May 8</text>
+                <text class="axis-tick" x="360" y="195">May 15</text>
+                <text class="axis-tick" x="540" y="195">May 22</text>
+              </svg>
+            </div>
+          </section>
+
+          <!-- ============ P2 — ContentHealth (support) ============ -->
+          <section class="blok-card" data-card="p2" aria-labelledby="p2-title">
+            <span class="premium-corner-badge blok-badge blok-badge--primary">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Premium
+            </span>
+            <div class="premium-content" style="display:flex; flex-direction:column; gap: var(--spacing-3); flex:1;">
+              <div class="blok-card__title" id="p2-title">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9 12l2 2 4-4"></path>
+                </svg>
+                Content health
+              </div>
+              <div class="content-health__row">
+                <div class="content-health__header">
+                  <span class="content-health__label">SEO</span>
+                  <span class="content-health__value">87%</span>
+                </div>
+                <div class="blok-progress">
+                  <div class="blok-progress__bar" data-progress="87" style="--progress-target: 0.87;"></div>
+                </div>
+              </div>
+              <div class="content-health__row">
+                <div class="content-health__header">
+                  <span class="content-health__label">Performance</span>
+                  <span class="content-health__value">92%</span>
+                </div>
+                <div class="blok-progress">
+                  <div class="blok-progress__bar" data-progress="92" style="--progress-target: 0.92;"></div>
+                </div>
+              </div>
+              <div class="content-health__row">
+                <div class="content-health__header">
+                  <span class="content-health__label">Accessibility</span>
+                  <span class="content-health__value">78%</span>
+                </div>
+                <div class="blok-progress">
+                  <div class="blok-progress__bar" data-progress="78" style="--progress-target: 0.78;"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ P3 — RecentEdits (support) ============ -->
+          <section class="blok-card" data-card="p3" aria-labelledby="p3-title">
+            <span class="premium-corner-badge blok-badge blok-badge--primary">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Premium
+            </span>
+            <div class="premium-content" style="display:flex; flex-direction:column; gap: var(--spacing-3); flex:1;">
+              <div class="blok-card__title" id="p3-title">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5L12 2z"></path>
+                </svg>
+                Recent edits
+              </div>
+              <ul class="recent-edits__list">
+                <li class="recent-edits__row">
+                  <span class="recent-edits__avatar">A</span>
+                  <div class="recent-edits__body">
+                    <div class="recent-edits__line1">Alex edited Pricing page</div>
+                    <div class="recent-edits__line2">12 min ago</div>
+                  </div>
+                </li>
+                <li class="recent-edits__row">
+                  <span class="recent-edits__avatar">J</span>
+                  <div class="recent-edits__body">
+                    <div class="recent-edits__line1">Jamie published Blog/launch</div>
+                    <div class="recent-edits__line2">1 hour ago</div>
+                  </div>
+                </li>
+                <li class="recent-edits__row">
+                  <span class="recent-edits__avatar">M</span>
+                  <div class="recent-edits__body">
+                    <div class="recent-edits__line1">Morgan renamed Hero</div>
+                    <div class="recent-edits__line2">3 hours ago</div>
+                  </div>
+                </li>
+                <li class="recent-edits__row">
+                  <span class="recent-edits__avatar">S</span>
+                  <div class="recent-edits__body">
+                    <div class="recent-edits__line1">Sam added FAQ section</div>
+                    <div class="recent-edits__line2">Yesterday</div>
+                  </div>
+                </li>
+                <li class="recent-edits__row">
+                  <span class="recent-edits__avatar">R</span>
+                  <div class="recent-edits__body">
+                    <div class="recent-edits__line1">Riley updated nav links</div>
+                    <div class="recent-edits__line2">2 days ago</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- ============ P4 — EngagementMetrics (HERO STRIP, full-width) ============ -->
+          <section class="blok-card engagement-metrics" data-card="p4" aria-labelledby="p4-title">
+            <span class="premium-corner-badge blok-badge blok-badge--primary">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Premium
+            </span>
+            <h3 id="p4-title" style="position:absolute; left:-9999px;">Engagement metrics</h3>
+            <div class="premium-content engagement-metrics__tile" role="group" aria-label="Page views">
+              <span class="engagement-metrics__value" data-counter="12400" data-counter-format="int" data-counter-final="12,400">—</span>
+              <span class="engagement-metrics__label">Page views</span>
+            </div>
+            <div class="premium-content engagement-metrics__tile" role="group" aria-label="Conversions">
+              <span class="engagement-metrics__value" data-counter="248" data-counter-format="int" data-counter-final="248">—</span>
+              <span class="engagement-metrics__label">Conversions</span>
+            </div>
+            <div class="premium-content engagement-metrics__tile" role="group" aria-label="Average session">
+              <span class="engagement-metrics__value" data-counter="272" data-counter-format="duration" data-counter-final="4m 32s">—</span>
+              <span class="engagement-metrics__label">Avg session</span>
+            </div>
+            <div class="premium-content engagement-metrics__tile" role="group" aria-label="Bounce rate">
+              <span class="engagement-metrics__value" data-counter="28" data-counter-format="percent" data-counter-final="28%">—</span>
+              <span class="engagement-metrics__label">Bounce rate</span>
+              <span class="engagement-metrics__trend">
+                <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(180deg);">
+                  <path d="M23 6l-9.5 9.5-5-5L1 18"></path>
+                  <path d="M17 6h6v6"></path>
+                </svg>
+                4% lower
+              </span>
+            </div>
+          </section>
+
+          <!-- ============ P5 — AI Insights (pair) ============ -->
+          <section class="blok-card" data-card="p5" aria-labelledby="p5-title">
+            <span class="premium-corner-badge blok-badge blok-badge--primary">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Premium
+            </span>
+            <div class="premium-content" style="display:flex; flex-direction:column; gap: var(--spacing-3); flex:1;">
+              <div class="blok-card__title" id="p5-title">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5L12 2z"></path>
+                </svg>
+                AI insights
+              </div>
+              <ul class="ai-insights__list">
+                <li class="ai-insights__item">
+                  <span class="ai-insights__bullet" aria-hidden="true"></span>
+                  <span>Your busiest day is typically Tuesday.</span>
+                </li>
+                <li class="ai-insights__item">
+                  <span class="ai-insights__bullet" aria-hidden="true"></span>
+                  <span>Premium content drives 3.2× engagement.</span>
+                </li>
+                <li class="ai-insights__item">
+                  <span class="ai-insights__bullet" aria-hidden="true"></span>
+                  <span>Consider scheduling around peak windows.</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- ============ P6 — Engagement Score (pair) ============ -->
+          <section class="blok-card engagement-score" data-card="p6" aria-labelledby="p6-title">
+            <span class="premium-corner-badge blok-badge blok-badge--primary">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Premium
+            </span>
+            <h3 id="p6-title" style="position:absolute; left:-9999px;">Engagement score</h3>
+            <div class="premium-content engagement-score__ring" role="img" aria-label="Engagement score: 87 out of 100">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="ring-track" cx="60" cy="60" r="50"></circle>
+                <circle class="ring-fill" cx="60" cy="60" r="50"></circle>
+              </svg>
+              <div class="engagement-score__ring-label">
+                <span class="engagement-score__ring-value">87</span>
+                <span class="engagement-score__ring-caption">score</span>
+              </div>
+            </div>
+            <div class="premium-content engagement-score__forecast">
+              <svg viewBox="0 0 200 50" preserveAspectRatio="none" aria-hidden="true">
+                <path class="spark-line" d="M0,38 L20,32 L40,36 L60,26 L80,30 L100,20 L120,24 L140,14 L160,18 L180,10 L200,12"></path>
+              </svg>
+              <span class="engagement-score__forecast-caption">7-day forecast</span>
+            </div>
+          </section>
+
+          <!-- ============ Subscribe Banner (locked state only) ============
+               v2's distinguishing move: this banner sits IN the masonry as
+               a hero-shaped tile, positioned absolutely inside the
+               .premium-region. Covers the P1+P5 column band (first 2 of 4
+               cols of the premium grid), spanning the full premium-region
+               height. On mobile, it becomes a static inline card via CSS.
+               ============================================================ -->
+          <aside
+            class="subscribe-banner"
+            role="region"
+            aria-labelledby="subscribe-banner-title"
+          >
+            <div class="subscribe-banner__icon" aria-hidden="true">
+              <svg class="icon icon--xl" viewBox="0 0 24 24">
+                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h2 class="subscribe-banner__title" id="subscribe-banner-title">
+              Unlock Premium
+            </h2>
+            <p class="subscribe-banner__price">€0.99 lifetime</p>
+            <p class="subscribe-banner__subtitle">
+              One-time payment. Lifetime access. No subscription.
+            </p>
+            <button
+              type="button"
+              class="blok-button blok-button--primary blok-button--lg subscribe-banner-cta"
+            >
+              Subscribe — €0.99 lifetime
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </aside>
+        </div>
+      </div>
+
+      <footer class="poc-footer">
+        <span class="poc-footer__hint">
+          POC v2 · Editorial Cadence · 4-col asymmetric masonry · 100ms stagger
+        </span>
+        <span class="poc-footer__hint">
+          tokens: Blok Nova preset (sitecore:blok-theming, captured 2026-05-15)
+        </span>
+      </footer>
+    </main>
+  </body>
+</html>
