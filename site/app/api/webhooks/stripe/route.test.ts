@@ -260,3 +260,253 @@ describe('T025 — webhook unknown event type', () => {
     logSpy.mockRestore();
   });
 });
+
+// ---------------------------------------------------------------------------
+// T042 — RED tests for 5 forward-compat webhook event handlers
+// ---------------------------------------------------------------------------
+
+// Hoisted mock for tenants.update (needed for subscription/invoice handlers)
+const { mockTenantsUpdate, mockTenantsUpdateEq } = vi.hoisted(() => {
+  const mockTenantsUpdateEq = vi.fn().mockResolvedValue({ error: null });
+  const mockTenantsUpdate = vi.fn(() => ({ eq: mockTenantsUpdateEq }));
+  return { mockTenantsUpdate, mockTenantsUpdateEq };
+});
+
+/**
+ * Extended Supabase mock that supports both upsert (for checkout handlers)
+ * and update().eq() chain (for subscription/invoice handlers).
+ */
+function setupSupabaseMocksExtended(
+  opts: {
+    insertError?: { code: string; message: string } | null;
+  } = {},
+) {
+  const insertResult = { error: opts.insertError ?? null };
+
+  mockSupabaseClient.from.mockImplementation((table: string) => {
+    if (table === 'processed_events') {
+      return {
+        insert: mockProcessedEventsInsert.mockResolvedValue(insertResult),
+      };
+    }
+    if (table === 'tenants') {
+      return {
+        upsert: mockTenantsUpsert.mockResolvedValue({ error: null }),
+        update: mockTenantsUpdate,
+      };
+    }
+    return {};
+  });
+}
+
+// ---------------------------------------------------------------------------
+// T042a — checkout.session.async_payment_succeeded → same upsert as completed
+// ---------------------------------------------------------------------------
+
+describe('T042a — checkout.session.async_payment_succeeded upserts tenant row', () => {
+  it('returns 200; tenants.upsert called with status=active plan=premium', async () => {
+    const fakeAsyncSucceededEvent = {
+      id: 'evt_test_async_succ',
+      type: 'checkout.session.async_payment_succeeded',
+      data: {
+        object: {
+          metadata: { tenant_id: 'tenant-a' },
+          customer: 'cus_x',
+          subscription: null,
+        },
+      },
+    };
+
+    mockVerifyWebhookSignature.mockResolvedValue(fakeAsyncSucceededEvent);
+    setupSupabaseMocksExtended();
+
+    const req = makeRequest();
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ ok: true });
+
+    expect(mockProcessedEventsInsert).toHaveBeenCalledWith({ event_id: 'evt_test_async_succ' });
+
+    expect(mockTenantsUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tenant_id: 'tenant-a',
+        stripe_customer_id: 'cus_x',
+        status: 'active',
+        plan: 'premium',
+        period_end: null,
+      }),
+      { onConflict: 'tenant_id' },
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T042b — checkout.session.async_payment_failed → warn log, no DB write
+// ---------------------------------------------------------------------------
+
+describe('T042b — checkout.session.async_payment_failed logs warning; no DB write', () => {
+  it('returns 200; console.warn called with [PaywallBlueprint] prefix; no tenants mutation', async () => {
+    const fakeAsyncFailedEvent = {
+      id: 'evt_test_async_fail',
+      type: 'checkout.session.async_payment_failed',
+      data: {
+        object: {
+          metadata: { tenant_id: 'tenant-b' },
+          customer: 'cus_x',
+        },
+      },
+    };
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    mockVerifyWebhookSignature.mockResolvedValue(fakeAsyncFailedEvent);
+    setupSupabaseMocksExtended();
+
+    const req = makeRequest();
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ ok: true });
+
+    // No DB mutations to tenants
+    expect(mockTenantsUpsert).not.toHaveBeenCalled();
+    expect(mockTenantsUpdate).not.toHaveBeenCalled();
+
+    // console.warn must be called with [PaywallBlueprint] prefix
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[PaywallBlueprint]'),
+      expect.anything(),
+    );
+
+    warnSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T042c — customer.subscription.updated → update plan/status/period_end by stripe_customer_id
+// ---------------------------------------------------------------------------
+
+describe('T042c — customer.subscription.updated updates status + seats_total + period_end', () => {
+  it('returns 200; tenants.update called with correct fields; .eq on stripe_customer_id', async () => {
+    const fakeSubUpdatedEvent = {
+      id: 'evt_test_sub_updated',
+      type: 'customer.subscription.updated',
+      data: {
+        object: {
+          id: 'sub_1',
+          customer: 'cus_x',
+          status: 'active',
+          current_period_end: 1234567890,
+          items: {
+            data: [{ quantity: 5 }],
+          },
+        },
+      },
+    };
+
+    mockVerifyWebhookSignature.mockResolvedValue(fakeSubUpdatedEvent);
+    setupSupabaseMocksExtended();
+
+    const req = makeRequest();
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ ok: true });
+
+    // tenants.update must be called with the correct shape
+    expect(mockTenantsUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'active',
+        seats_total: 5,
+        period_end: new Date(1234567890 * 1000).toISOString(),
+      }),
+    );
+
+    // .eq filter must be applied on stripe_customer_id
+    expect(mockTenantsUpdateEq).toHaveBeenCalledWith('stripe_customer_id', 'cus_x');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T042d — customer.subscription.deleted → set status='cancelled'; no period_end change
+// ---------------------------------------------------------------------------
+
+describe('T042d — customer.subscription.deleted sets status=cancelled', () => {
+  it('returns 200; tenants.update called with status=cancelled; no period_end change', async () => {
+    const fakeSubDeletedEvent = {
+      id: 'evt_test_sub_deleted',
+      type: 'customer.subscription.deleted',
+      data: {
+        object: {
+          id: 'sub_1',
+          customer: 'cus_x',
+        },
+      },
+    };
+
+    mockVerifyWebhookSignature.mockResolvedValue(fakeSubDeletedEvent);
+    setupSupabaseMocksExtended();
+
+    const req = makeRequest();
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ ok: true });
+
+    // tenants.update called with status=cancelled; period_end NOT included
+    expect(mockTenantsUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'cancelled',
+      }),
+    );
+    // Ensure period_end is NOT in the update payload
+    const updateCall = mockTenantsUpdate.mock.calls[0][0] as Record<string, unknown>;
+    expect(updateCall).not.toHaveProperty('period_end');
+
+    // .eq filter on stripe_customer_id
+    expect(mockTenantsUpdateEq).toHaveBeenCalledWith('stripe_customer_id', 'cus_x');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T042e — invoice.payment_failed → set status='past_due'
+// ---------------------------------------------------------------------------
+
+describe('T042e — invoice.payment_failed sets status=past_due', () => {
+  it('returns 200; tenants.update called with status=past_due; .eq on stripe_customer_id', async () => {
+    const fakeInvoiceFailedEvent = {
+      id: 'evt_test_invoice_failed',
+      type: 'invoice.payment_failed',
+      data: {
+        object: {
+          id: 'in_1',
+          customer: 'cus_x',
+        },
+      },
+    };
+
+    mockVerifyWebhookSignature.mockResolvedValue(fakeInvoiceFailedEvent);
+    setupSupabaseMocksExtended();
+
+    const req = makeRequest();
+    const res = await POST(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ ok: true });
+
+    // tenants.update called with status=past_due
+    expect(mockTenantsUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'past_due',
+      }),
+    );
+
+    // .eq filter on stripe_customer_id
+    expect(mockTenantsUpdateEq).toHaveBeenCalledWith('stripe_customer_id', 'cus_x');
+  });
+});
