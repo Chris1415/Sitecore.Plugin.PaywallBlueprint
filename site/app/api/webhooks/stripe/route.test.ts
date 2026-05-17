@@ -464,7 +464,8 @@ describe('T042d — customer.subscription.deleted sets status=cancelled', () => 
       }),
     );
     // Ensure period_end is NOT in the update payload
-    const updateCall = mockTenantsUpdate.mock.calls[0][0] as Record<string, unknown>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateCall = (mockTenantsUpdate.mock.calls as unknown as Array<[Record<string, unknown>]>)[0][0];
     expect(updateCall).not.toHaveProperty('period_end');
 
     // .eq filter on stripe_customer_id
