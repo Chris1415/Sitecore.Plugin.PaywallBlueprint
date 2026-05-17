@@ -17,7 +17,11 @@ This directory holds ADRs for this product workspace.
 | ADR-0009 | Supabase RLS enabled with permissive default policies in PRD-000; production adopters harden | Accepted |
 | ADR-0010 | Supabase setup via copy-pasteable SQL block in `supabase/schema.sql`, not CLI automation | Accepted |
 | ADR-0011 | Tenant-only entitlement in PRD-000; per-user seat enforcement deferred to PRD-002 | Accepted |
+| ADR-0012 | Stripe Price model — one-time €0.99 lifetime in PRD-001 | Accepted |
+| ADR-0013 | Scaffold migration 4a → 4b in PRD-001; webhook hosted as Next.js API route in same app | Accepted |
+| ADR-0014 | Iframe success-return — postMessage primary + 3s/30s polling fallback | Accepted |
+| ADR-0015 | Stripe Customer orphan recovery via `metadata.tenant_id` lookup before create | Accepted |
 
 ## Next number
 
-Use the next free four-digit id after the highest existing `adr-*.md`. Next: `0012`.
+Use the next free four-digit id after the highest existing `adr-*.md`. Next: `0016`.

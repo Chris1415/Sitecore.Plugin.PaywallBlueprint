@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { MarketplaceProvider } from "@/components/providers/marketplace";
+import { HahnSoloFooter } from "@/components/hahn-solo-footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +28,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <MarketplaceProvider>{children}</MarketplaceProvider>
+        {/* MarketplaceProvider moved into per-extension-point nested layouts
+            (e.g. app/full-page/layout.tsx) so the root IntroPage at `/` can
+            render without being blocked by the SDK iframe handshake. */}
+        {children}
+        <HahnSoloFooter />
       </body>
     </html>
   );

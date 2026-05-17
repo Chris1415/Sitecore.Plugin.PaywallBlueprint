@@ -1,72 +1,112 @@
-/**
- * Paywall Blueprint — single-page freemium layout shell.
- *
- * T035 (Tranche C): Integrates <PaywallGate> via <GatedSection> + <ErrorBoundary>.
- * FreeSection is OUTSIDE the ErrorBoundary — keeps rendering even when gate throws (NFR-6).
- *
- * Preview-state mechanism (dev-only, T021/T035 + operator request 2026-05-13):
- *   - URL: ?previewState=seats-full | unassigned | allowed | no-sub
- *   - In-page picker buttons (no URL change required) inside GatedSectionWithDevPicker
- *   - Both branches tree-shaken from production builds per process.env.NODE_ENV guard
- *
- * Layout source of truth: pocs/poc-v1-prd000/state-allowed.html
- *
- * sitecore:marketplace-sdk-extension-routes — single xmc:fullscreen route at "/"
- * sitecore:blok-components — Topbar, Separator
- * sitecore:blok-theming — bg-background, text-foreground, semantic tokens only
- */
-
-import Topbar from "@/components/bloks/top-bar";
-import { Separator } from "@/components/ui/separator";
-import { FreeSection } from "@/components/free-section";
-import { GatedSectionWithDevPicker } from "@/components/gated-section-with-dev-picker";
-import { DemoModeBanner } from "@/src/lib/paywall/DemoModeBanner";
+import Image from "next/image";
+import Link from "next/link";
 import {
-  isValidPreviewState,
-  type PreviewState,
-} from "@/src/lib/paywall/preview-state";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
-interface PageProps {
-  searchParams?: Promise<{ previewState?: string }>;
-}
-
-export default async function Page({ searchParams }: PageProps) {
-  const resolvedParams = await searchParams;
-  const raw = resolvedParams?.previewState;
-  const initialPreviewState: PreviewState =
-    process.env.NODE_ENV !== "production" && isValidPreviewState(raw)
-      ? raw
-      : null;
-
+/**
+ * Public IntroPage at `/`.
+ *
+ * Renders when the deploy URL is visited outside the Cloud Portal iframe.
+ * Marketing-style landing: hero, project-overview metadata, single
+ * extension-point card linking to the gated demo at `/full-page`.
+ *
+ * Not wrapped by MarketplaceProvider — that lives at `app/full-page/layout.tsx`
+ * so this page is not gated by the SDK handshake.
+ */
+export default function IntroPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Application topbar — brandName only; no logo, no nav, no user avatar */}
-      {/* sitecore:blok-components @blok/topbar */}
-      <Topbar
-        brandName="Paywall Blueprint"
-        menuButton={false}
-        navigation={[]}
-        rightSideItems={[]}
-      />
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold text-foreground mb-6 tracking-tight">
+            Paywall Blueprint
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            The first publicly available worked example of monetizing a
+            Sitecore Marketplace App. A <code>&lt;PaywallGate&gt;</code> React
+            component that evaluates tenant entitlement, four ready-to-ship
+            UX state components, a swappable <code>EntitlementStore</code>{" "}
+            adapter backed by Supabase, and a <code>PaymentProvider</code>{" "}
+            interface stubbed for Stripe direct integration. Fork it, swap
+            the content and the adapters, ship a paywalled Marketplace app in
+            hours.
+          </p>
+        </div>
 
-      {/* Tranche D (T040): DemoModeBanner — rendered when env-flag is 'false' (ADR-0004) */}
-      {/* NEXT_PUBLIC_* vars are inlined at build time; string === 'false' is correct check */}
-      {process.env.NEXT_PUBLIC_PAYWALL_ENABLED === "false" && (
-        <DemoModeBanner />
-      )}
+        <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-8 mb-16 border border-border/50">
+          <h2 className="text-2xl font-semibold mb-6 text-center">
+            Project Overview
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <div className="font-medium text-foreground">Title</div>
+              <div className="text-muted-foreground">Paywall Blueprint</div>
+            </div>
+            <div className="space-y-2">
+              <div className="font-medium text-foreground">Author</div>
+              <div className="text-muted-foreground">Christian Hahn</div>
+            </div>
+            <div className="space-y-2">
+              <div className="font-medium text-foreground">Version</div>
+              <div className="text-muted-foreground">0.1.0</div>
+            </div>
+            <div className="space-y-2">
+              <div className="font-medium text-foreground">Released at (V1)</div>
+              <div className="text-muted-foreground">15.05.2026</div>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <div className="font-medium text-foreground">
+                Extension Points
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge colorScheme="primary">Full Page</Badge>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      {/* Page shell — centered, max ~880px wide per UI spec § 3.1 */}
-      <main className="flex-1 max-w-[880px] mx-auto w-full px-6 pt-6 pb-8 flex flex-col gap-6">
-        {/* Free section — OUTSIDE ErrorBoundary; always renders even when gate throws (NFR-6) */}
-        <FreeSection />
-
-        {/* Separator between free and gated sections */}
-        <Separator />
-
-        {/* Gated section + dev state picker (picker is tree-shaken in production) */}
-        {/* GatedSectionWithDevPicker owns ErrorBoundary + GatedSection internally */}
-        <GatedSectionWithDevPicker initialPreviewState={initialPreviewState} />
-      </main>
+        <div className="grid grid-cols-1 max-w-2xl mx-auto">
+          <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 flex flex-col">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">Full Page</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 flex flex-col flex-grow">
+              <div className="bg-muted rounded-lg overflow-hidden">
+                <Image
+                  src="/full-page.png"
+                  alt="Paywall Blueprint — Full Page surface (allowed state with welcome card)"
+                  width={720}
+                  height={400}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <CardDescription className="text-sm leading-relaxed flex-grow">
+                The single extension-point route. Renders the freemium layout
+                — a free section above a paywalled section gated by{" "}
+                <code>&lt;PaywallGate&gt;</code>. The gate evaluates tenant
+                entitlement via the swappable <code>EntitlementStore</code>{" "}
+                adapter and resolves to one of four states (allowed, no
+                subscription, seats full, user unassigned), each with a
+                ready-to-ship state component. A skeleton state handles
+                loading; an error boundary keeps the free section visible
+                when the gate throws.
+              </CardDescription>
+              <Link href="/full-page" className="mt-auto mb-2">
+                <Button variant="outline" className="w-full bg-transparent">
+                  Open Full Page
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

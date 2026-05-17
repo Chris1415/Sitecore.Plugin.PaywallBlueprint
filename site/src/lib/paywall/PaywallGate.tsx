@@ -37,6 +37,7 @@ import { NoSubscriptionState } from "./states/NoSubscriptionState";
 import { SeatsFullState } from "./states/SeatsFullState";
 import { UserUnassignedState } from "./states/UserUnassignedState";
 import { useAppContext, useHostUser } from "@/components/providers/marketplace";
+import { useEntitlement } from "@/src/lib/paywall/hooks/useEntitlement";
 
 type GatePhase =
   | { phase: "skeleton" }
@@ -228,12 +229,32 @@ function PaywallGateInner({
   const onStateChangeRef = useRef(onStateChange);
   const resolveCallbackFiredRef = useRef(false);
 
+  // T036: subscribe to useEntitlement for post-payment refresh (ADR-0014).
+  // When the hook's polling detects status === 'allowed' (after checkout), bump
+  // refreshKey to re-run the store query — gate transitions to AllowedState.
+  // The hook is safe here because PaywallGateInner is always inside MarketplaceProvider
+  // (PaywallGate is rendered inside /full-page/layout.tsx which wraps MarketplaceProvider).
+  // triggerCheckout is unused at gate level (dialog owns it); only entitlement is read.
+  const { entitlement: hookEntitlement } = useEntitlement();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const prevAllowedRef = useRef(false);
+
+  useEffect(() => {
+    const isNowAllowed = hookEntitlement?.status === 'allowed';
+    if (isNowAllowed && !prevAllowedRef.current) {
+      prevAllowedRef.current = true;
+      // Re-trigger the store query by bumping the key
+      resolveCallbackFiredRef.current = false;
+      setRefreshKey((k) => k + 1);
+    }
+  }, [hookEntitlement]);
+
   // Keep the callback ref in sync — use useEffect to avoid "update ref during render"
   useEffect(() => {
     onStateChangeRef.current = onStateChange;
   });
 
-  // FR-1 Step 5 — entitlement store call
+  // FR-1 Step 5 — entitlement store call; re-runs when refreshKey bumps (T036 refresh)
   useEffect(() => {
     let cancelled = false;
 
@@ -251,7 +272,8 @@ function PaywallGateInner({
     return () => {
       cancelled = true;
     };
-  }, [tenantId, userId, store]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId, userId, store, refreshKey]);
 
   // Fire onStateChange once per resolved state
   useEffect(() => {

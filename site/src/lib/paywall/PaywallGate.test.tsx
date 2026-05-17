@@ -40,6 +40,19 @@ vi.mock("@/components/providers/marketplace", () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Mock useEntitlement — T036: gate subscribes to hook for post-payment refresh.
+// Default: no entitlement (idle). Individual tests override if needed.
+// ---------------------------------------------------------------------------
+vi.mock("@/src/lib/paywall/hooks/useEntitlement", () => ({
+  useEntitlement: vi.fn(() => ({
+    entitlement: null,
+    isLoading: false,
+    error: null,
+    triggerCheckout: vi.fn(),
+  })),
+}));
+
+// ---------------------------------------------------------------------------
 // Mock state components (so gate tests don't depend on their impl)
 // ---------------------------------------------------------------------------
 vi.mock("@/src/lib/paywall/states/SkeletonState", () => ({
