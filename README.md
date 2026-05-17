@@ -276,6 +276,206 @@ The evaluator is not called. These states are visual references for PRD-002.
 
 ---
 
+## Stripe Setup
+
+PRD-001 wires a real Stripe Checkout flow into the blueprint. Follow these 6 steps to
+connect your own Stripe account.
+
+**1. Create or pick a Stripe account.**
+
+Sign up for free at [https://stripe.com](https://stripe.com). For a paid Marketplace
+app you will eventually need to enable Stripe Connect — that is out of scope for this
+blueprint (see Roadmap).
+
+**2. Switch to test mode.**
+
+Toggle "Test mode" in the upper-right corner of the Stripe Dashboard. Test mode is
+free, isolated from live money, and is what the blueprint targets by default.
+
+**3. Create the Product + Price.**
+
+Two options:
+
+- **Reuse the blueprint defaults** (only useful if you are running the operator's
+  Stripe account — not portable): Product `prod_UWKcVQmJH2MiSa`, Price
+  `price_1TXHyIAHnDmxitZjwxHhKe8y` (one-time €0.99 EUR).
+- **Create your own:** Dashboard → Catalog → Products → "Add product" → name "Paywall
+  Blueprint Premium" (or your own name) → Price section → choose "One-time" → €0.99
+  EUR. Save. Copy the Price ID (starts with `price_`).
+
+**4. Copy your API keys.**
+
+Dashboard → Developers → API keys.
+
+- "Publishable key" (starts with `pk_test_`) → `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+  in `site/.env.local`
+- "Secret key" (reveal once; treat as a password) → `STRIPE_SECRET_KEY` in
+  `site/.env.local`
+
+**5. Local webhook listener (development).**
+
+Install the Stripe CLI per [https://docs.stripe.com/stripe-cli](https://docs.stripe.com/stripe-cli),
+then:
+
+```bash
+stripe login
+stripe listen --forward-to https://localhost:3000/api/webhooks/stripe --skip-verify
+```
+
+> **Important:** the dev server runs `next dev --experimental-https` (mkcert). The
+> `--forward-to` URL must use `https://` and the `--skip-verify` flag is required
+> because mkcert is self-signed. Stripe CLI defaults to plain `http://` if no scheme
+> is given, which silently fails — the trigger output reports success but webhooks
+> never arrive.
+
+The CLI prints a `whsec_*` signing secret on startup. Copy that value into
+`STRIPE_WEBHOOK_SIGNING_SECRET` in `site/.env.local` and restart the dev server.
+**Each `stripe listen` session mints a fresh signing secret.**
+
+**6. Production webhook endpoint.**
+
+Stripe Dashboard → Developers → Webhooks → Add endpoint.
+
+- URL: `https://<your-production-domain>/api/webhooks/stripe`
+- Select all 6 event types: `checkout.session.completed`,
+  `checkout.session.async_payment_succeeded`,
+  `checkout.session.async_payment_failed`, `customer.subscription.updated`,
+  `customer.subscription.deleted`, `invoice.payment_failed`.
+
+Copy the production signing secret to your hosting platform's environment variables
+(Vercel → Project Settings → Environment Variables). **Do NOT put it in
+`.env.local`** — that file is local-only and gitignored.
+
+> **CSP heads-up:** the `next.config.mjs` ships with `frame-ancestors` including
+> `https://app.sitecorecloud.io` (the canonical Cloud Portal origin). If you add a
+> custom Vercel domain or serve from another Cloud Portal environment, add those
+> origins to the `frame-ancestors` list in `next.config.mjs`.
+
+### Stripe environment variables
+
+| Variable | Purpose | Server-only? | Required? |
+|---|---|---|---|
+| `STRIPE_SECRET_KEY` | Stripe API auth (server-side) | YES | YES |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe.js init (client-readable) | NO | YES |
+| `STRIPE_PRICE_ID` | Price ID for the €0.99 lifetime price | YES (server convention) | YES |
+| `STRIPE_WEBHOOK_SIGNING_SECRET` | Verify webhook signatures | YES | YES |
+
+### Test card numbers
+
+Use these in Stripe Checkout test mode (any future MM/YY, any 3-digit CVC, any
+postal code — test mode is lenient):
+
+- `4242 4242 4242 4242` — generic success
+- `4000 0000 0000 9995` — insufficient funds (card declined)
+- `4000 0025 0000 3155` — 3D Secure authentication required
+
+### Optional: Stripe Tax
+
+The blueprint ships with `automatic_tax: { enabled: true }` in `StripeProvider.ts`
+(search `automatic_tax` — it is on line ~95). Stripe Tax is an opt-in Dashboard
+feature:
+
+1. Dashboard → Settings → Tax → Activate.
+2. The Checkout Session params already include
+   `customer_update: { address: 'auto', name: 'auto' }`. This captures the
+   customer's billing address during Checkout and saves it to the Customer record.
+   **Stripe requires this when `automatic_tax: true` is set against an existing
+   Customer with no address — without it you will get
+   `customer_tax_location_invalid`.**
+
+To disable Stripe Tax: change `automatic_tax: { enabled: true }` to
+`{ enabled: false }` in `site/src/lib/paywall/providers/StripeProvider.ts` and
+remove the `customer_update` line. Then bump `CHECKOUT_PARAMS_VERSION` (the constant
+directly above the class declaration) — see "Idempotency key versioning" in the Known
+limitations section.
+
+---
+
+## Known limitations of v1 / Adopter responsibilities
+
+**1. `/api/entitlement` is UNAUTHENTICATED in v1.**
+
+The server reads tenant entitlement directly via the Supabase service-role key.
+There is no auth check on the GET endpoint (NFR-7). Adopters using this for
+production-sensitive tenant lists MUST add per-route authentication — for example,
+verify that `host.user.sub` from the Marketplace SDK context matches the requested
+`tenantId` before returning data. PRD-002 hardens this as part of the per-user seat
+enforcement work.
+
+**2. Webhook event ordering is not reconciled.**
+
+Out-of-order events are not buffered or sequenced. Each event upserts or updates the
+`tenants` row independently. In practice this is rare — Stripe delivers events in
+approximate creation order — but adopters with strict reconciliation needs should add
+an `event.created` timestamp check and sequence buffering on top of the existing
+`processed_events` idempotency table.
+
+**3. `STRIPE_PRICE_ID` is not validated at boot.**
+
+A typo in the Price ID causes the first checkout attempt to fail at runtime with a
+translated `resource_missing` error (visible in the dialog). Adopters who want
+fail-fast startup can add a probe:
+
+```typescript
+// In a server startup hook (e.g. instrumentation.ts):
+await stripe.prices.retrieve(process.env.STRIPE_PRICE_ID!);
+```
+
+**4. `charge.refunded` is NOT handled — returns 200 silently.**
+
+The webhook handler fall-through acknowledges the event but takes no action on
+refunds. Adopters who want refund-driven downgrade can add a case branch in
+`site/app/api/webhooks/stripe/route.ts`:
+
+```typescript
+if (event.type === 'charge.refunded') {
+  const charge = event.data.object as Stripe.Charge;
+  await supabase
+    .from('tenants')
+    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+    .eq('stripe_customer_id', charge.customer);
+  return Response.json({ ok: true }, { status: 200 });
+}
+```
+
+**5. Dialog Cancel stays enabled mid-flight (by design — FR-8).**
+
+Closing the dialog stops the in-iframe polling loop but does NOT close the Stripe
+Checkout tab that was opened in a new browser tab. If the user completes payment
+in that still-open tab, the next time `PaywallGate` evaluates (on page reload or
+re-open of the dialog) it will reflect the updated entitlement.
+
+**6. Cross-app Stripe accounts: orphan recovery is scoped to one `app_slug`.**
+
+`StripeProvider` uses `const APP_SLUG = 'paywall-blueprint'` (ADR-0015) to scope
+the Stripe Customer lookup to this specific app. Adopters who fork the blueprint and
+host multiple Marketplace apps under one Stripe account **MUST change `APP_SLUG`**
+to a value unique to their app (e.g. `'redirect-manager'`). Without this, orphan
+recovery across apps will cross-contaminate Customer lookups.
+
+The constant is at the top of
+`site/src/lib/paywall/providers/StripeProvider.ts`.
+
+### Idempotency key versioning
+
+`StripeProvider.generateCheckoutUrl` uses `${tenantId}:${CHECKOUT_PARAMS_VERSION}`
+as the Stripe idempotency key. Whenever you change the Checkout Session params shape
+— add or remove a field, flip `automatic_tax`, swap the price, add `customer_update`,
+etc. — **bump `CHECKOUT_PARAMS_VERSION`** in
+`site/src/lib/paywall/providers/StripeProvider.ts`.
+
+Stripe caches the first request's params against the idempotency key and rejects
+subsequent requests with the SAME key but DIFFERENT params with:
+
+> "Keys for idempotent requests can only be used with the same parameters they were
+> first used with."
+
+Bumping the version constant produces fresh keys for every tenant — Stripe re-runs
+the request with the new params. The JSDoc comment above `CHECKOUT_PARAMS_VERSION`
+carries a change history (v1 → v2 is already documented there).
+
+---
+
 ## Configuration
 
 All environment variables with their purpose, required/optional status, and default value:
@@ -372,8 +572,9 @@ This is the recommended path for most adopters.
 
 In `site/src/lib/paywall/states/NoSubscriptionState.tsx` and `SeatsFullState.tsx`, replace
 `https://example.com/buy` and `https://example.com/upgrade` with your real checkout and
-upgrade URLs. In PRD-001 these will be generated dynamically by the Stripe adapter via
-`PaymentProvider.generateCheckoutUrl(...)`.
+upgrade URLs. The `PaywallCheckoutDialog` already calls `/api/checkout` dynamically via
+`useEntitlement().triggerCheckout()` — the "View plans" CTA opens the dialog which
+handles the Stripe Checkout session creation end-to-end.
 
 **Step 4 (optional): swap the `EntitlementStore` adapter.**
 
@@ -430,87 +631,24 @@ not feasible.
 
 ---
 
-## Provider swap-point (post-PRD-001)
+## Provider swap-point
 
 The `PaymentProvider` interface is in `site/src/lib/paywall/types.ts`. PRD-001 ships the
-first concrete implementation against Stripe Billing + Entitlements API + Customer Portal.
+first concrete implementation — `StripeProvider` at
+`site/src/lib/paywall/providers/StripeProvider.ts` — against Stripe Billing API and the
+Stripe webhook event model (one-time €0.99 EUR lifetime per ADR-0012).
 
-### Stripe wiring shape (PRD-001 preview)
+To implement a second payment provider (Paddle, Polar.sh, Lemon Squeezy — post-PRD-003),
+implement the four methods from `PaymentProvider` and swap the instance constructed in
+`site/app/api/checkout/route.ts` and `site/app/api/webhooks/stripe/route.ts`.
 
-To implement `PaymentProvider` yourself before PRD-001 ships, here is the Stripe wiring shape:
-
-```typescript
-import Stripe from 'stripe';
-
-export class StripeProvider implements PaymentProvider {
-  private stripe: Stripe;
-  constructor(secretKey: string) {
-    this.stripe = new Stripe(secretKey, { apiVersion: '2025-01-27.acacia' });
-  }
-
-  async generateCheckoutUrl({ tenantId, userEmail, priceId, returnUrl }: {
-    tenantId: string; userEmail: string; priceId?: string; returnUrl?: string;
-  }): Promise<string> {
-    // Look up or create a Stripe Customer for this tenantId
-    const customers = await this.stripe.customers.list({ email: userEmail, limit: 1 });
-    const customer = customers.data[0] ?? await this.stripe.customers.create({
-      email: userEmail,
-      metadata: { tenantId },
-    });
-
-    const session = await this.stripe.checkout.sessions.create({
-      customer: customer.id,
-      mode: 'subscription',
-      line_items: [{ price: priceId ?? process.env.STRIPE_DEFAULT_PRICE_ID!, quantity: 1 }],
-      success_url: returnUrl ?? `${process.env.NEXT_PUBLIC_APP_URL}/?checkout=success`,
-      cancel_url: returnUrl ?? `${process.env.NEXT_PUBLIC_APP_URL}/`,
-    });
-
-    return session.url!;
-  }
-
-  async generatePortalUrl({ tenantId, returnUrl }: { tenantId: string; returnUrl: string }): Promise<string> {
-    // Retrieve stripe_customer_id from your tenants table
-    const { stripeCustomerId } = await getStripeCustomerIdFromTenant(tenantId);
-    const session = await this.stripe.billingPortal.sessions.create({
-      customer: stripeCustomerId,
-      return_url: returnUrl,
-    });
-    return session.url;
-  }
-
-  async verifyWebhookSignature(rawBody: string, signature: string): Promise<boolean> {
-    try {
-      this.stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET!);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async parseWebhookPayload(rawBody: string): Promise<{ providerEventId: string; tenantId: string; kind: 'subscription_created' | 'subscription_updated' | 'subscription_cancelled' | 'payment_failed' | 'payment_succeeded'; payload: unknown }> {
-    // Parse the Stripe event and map to the PaymentProvider contract
-    const event = JSON.parse(rawBody) as Stripe.Event;
-    const kindMap: Record<string, 'subscription_created' | 'subscription_updated' | 'subscription_cancelled' | 'payment_failed' | 'payment_succeeded'> = {
-      'customer.subscription.created': 'subscription_created',
-      'customer.subscription.updated': 'subscription_updated',
-      'customer.subscription.deleted': 'subscription_cancelled',
-      'invoice.payment_failed': 'payment_failed',
-      'invoice.payment_succeeded': 'payment_succeeded',
-    };
-    const sub = event.data.object as Stripe.Subscription;
-    return {
-      providerEventId: event.id,
-      tenantId: sub.metadata?.tenantId ?? '',
-      kind: kindMap[event.type] ?? 'subscription_updated',
-      payload: event.data.object,
-    };
-  }
-}
-```
-
-Pass it to `<PaywallGate>` like any other store (or wire it into your webhook handler).
-PRD-001 will ship this adapter properly with tests, error handling, and the webhook route.
+**Note on the interface:** `PaymentProvider.verifyWebhookSignature` returns
+`Promise<unknown>` — the concrete return type is provider-specific (the Stripe
+implementation returns `Promise<Stripe.Event>`). The webhook route casts to the concrete
+type after calling this method. `PaymentProvider.parseWebhookPayload` takes a raw body
+string; the StripeProvider implementation was adapted to take a pre-parsed `Stripe.Event`
+for type-safety — the interface and the second-provider convention will be reconciled
+in PRD-003.
 
 ---
 
@@ -522,14 +660,14 @@ PRD-001 will ship this adapter properly with tests, error handling, and the webh
 the component in the React tree, and force the `children` to render regardless of the
 entitlement result. The gate is a UX guardrail, not a cryptographic lock.
 
-**The real security is server-side per-feature enforcement.** PRD-001 will ship a
-`withEntitlement(handler)` higher-order function for API routes that verifies the tenant's
-active status on every request — so even if a user forces the client to render the gated UI,
-any server-side feature they try to use will reject the call.
+**The real security is server-side per-feature enforcement.** Call `/api/entitlement` from
+your API route handlers to verify the tenant's active status on every request — so even if
+a user forces the client to render the gated UI, any server-side feature they try to use
+will reject the call. A `withEntitlement(handler)` higher-order wrapper is scoped to a
+future PRD.
 
-PRD-000 has no premium feature behind the gate (the gated content is intentional placeholder),
-so this is documentation-only for now. But any adopter shipping real premium functionality
-MUST add server-side enforcement before going to production.
+The gated content in this blueprint is an intentional placeholder. Any adopter shipping
+real premium functionality MUST add server-side enforcement before going to production.
 
 ---
 
