@@ -20,7 +20,7 @@
 
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,20 +44,21 @@ interface PaywallCheckoutDialogProps {
 }
 
 export function PaywallCheckoutDialog({ children }: PaywallCheckoutDialogProps) {
-  const { entitlement, isLoading, error, triggerCheckout } = useEntitlement();
+  const { isLoading, error, triggerCheckout } = useEntitlement();
   const [open, setOpen] = useState(false);
 
-  // Auto-close on payment success. The polling state machine in useEntitlement
-  // sets `entitlement` to { status: 'allowed' } when the post-payment poll
-  // succeeds (either via the postMessage immediate-poll from /paywall-return or
-  // via the 3s interval). Closing the dialog removes the visual blocker so the
-  // user sees the AllowedState that PaywallGate has already transitioned to
-  // through its own useEntitlement subscription (T036).
-  useEffect(() => {
-    if (entitlement?.status === "allowed") {
-      setOpen(false);
-    }
-  }, [entitlement?.status]);
+  // Close the dialog synchronously the moment Subscribe is clicked, then fire
+  // the async triggerCheckout (opens Stripe in a new tab and starts polling).
+  // The user immediately sees the gate underneath instead of a stale dialog.
+  // When polling detects payment success, useEntitlement calls
+  // window.location.reload() — the iframe restarts and the gate re-evaluates
+  // from scratch against the entitlement store. Belt-and-suspenders vs. relying
+  // on the refresh-key bump in PaywallGate (T036) which can race with Radix
+  // portal teardown.
+  const onSubscribe = () => {
+    setOpen(false);
+    void triggerCheckout();
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -100,7 +101,7 @@ export function PaywallCheckoutDialog({ children }: PaywallCheckoutDialogProps) 
             type="button"
             disabled={isLoading}
             aria-busy={isLoading}
-            onClick={() => void triggerCheckout()}
+            onClick={onSubscribe}
           >
             {isLoading ? (
               <>
