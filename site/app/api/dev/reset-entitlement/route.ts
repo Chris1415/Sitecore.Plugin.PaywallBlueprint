@@ -1,5 +1,5 @@
 /**
- * POST /api/dev/reset-entitlement — DEV-ONLY tenant reset for testing
+ * POST /api/dev/reset-entitlement — always-on demo reset endpoint
  *
  * Comprehensive cleanup: drops EVERY tenants row sharing the same
  * stripe_customer_id as the supplied tenantId, plus the processed_events
@@ -8,9 +8,11 @@
  * Gate D smoke 2026-05-18) so the next checkout attempt starts from a
  * truly clean state.
  *
- * Security: HARD-REFUSES in production (NODE_ENV === "production" → 403).
- * Adopters who fork the blueprint inherit the same guard. Defense in depth:
- * the ResetEntitlementButton in components/ also gates render on NODE_ENV.
+ * The paywall-blueprint is a demo / showcase product with no real
+ * production deployment to protect — the endpoint is live in every
+ * environment so a Subscribe → revoke → Subscribe loop works everywhere
+ * the demo runs. Adopters who fork the blueprint for real production use
+ * should add their own auth check or gate this route behind `NODE_ENV`.
  *
  * sitecore:marketplace-sdk-lifecycle — server-only secret usage (service-role
  * key bypasses RLS per ADR-0009 + NFR-7).
@@ -19,14 +21,6 @@
 import { createServiceRoleClient } from "@/app/api/_lib/supabase-server";
 
 export async function POST(request: Request): Promise<Response> {
-  // ── Production guard ────────────────────────────────────────────────────
-  if (process.env.NODE_ENV === "production") {
-    return Response.json(
-      { error: "dev endpoint disabled in production" },
-      { status: 403 },
-    );
-  }
-
   // ── Parse body ──────────────────────────────────────────────────────────
   let body: { tenantId?: unknown };
   try {

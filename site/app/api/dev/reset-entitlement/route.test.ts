@@ -1,15 +1,18 @@
 /**
- * /api/dev/reset-entitlement — DEV-ONLY reset endpoint
+ * /api/dev/reset-entitlement — always-on demo reset endpoint
  *
  * Covers:
- *   - Production gate: 403 when NODE_ENV === "production"
  *   - Invalid body: 400 when tenantId missing
  *   - Happy path: looks up stripe_customer_id, deletes all tenants rows for
  *     that customer, flushes processed_events for that customer, returns
  *     deletedTenantCount + deletedEventCount
+ *   - Fallback: when stripe_customer_id is null, tenant-only delete path
+ *
+ * No production gate — the blueprint is a demo app; adopters who fork it
+ * for real production use should add their own auth check.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock the supabase client factory BEFORE importing the route.
 vi.mock("@/app/api/_lib/supabase-server", () => ({
@@ -72,34 +75,9 @@ function makeMockSupabase(opts: {
   };
 }
 
-const originalNodeEnv = process.env.NODE_ENV;
-
-describe("/api/dev/reset-entitlement — DEV-ONLY endpoint", () => {
+describe("/api/dev/reset-entitlement — always-on demo endpoint", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Direct assignment works on the env proxy; defineProperty doesn't.
-    (process.env as Record<string, string | undefined>).NODE_ENV = "development";
-  });
-
-  afterEach(() => {
-    (process.env as Record<string, string | undefined>).NODE_ENV = originalNodeEnv;
-  });
-
-  it("HARD-REFUSES in production (NODE_ENV === 'production' → 403)", async () => {
-    (process.env as Record<string, string | undefined>).NODE_ENV = "production";
-    const { POST } = await import("./route");
-
-    const res = await POST(
-      new Request("http://test/api/dev/reset-entitlement", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ tenantId: "any" }),
-      }),
-    );
-
-    expect(res.status).toBe(403);
-    const body = (await res.json()) as { error: string };
-    expect(body.error).toMatch(/disabled in production/i);
   });
 
   it("returns 400 when tenantId is missing from body", async () => {
