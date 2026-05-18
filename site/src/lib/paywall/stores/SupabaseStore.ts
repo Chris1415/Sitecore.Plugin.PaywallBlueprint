@@ -32,7 +32,14 @@ export class SupabaseStore implements EntitlementStore, EntitlementSeed {
 
     if (error) throw error;
 
-    if (!tenant || tenant.status !== 'active') {
+    // Allowed requires BOTH plan === 'premium' AND status === 'active'.
+    // The schema default is plan='starter' (see supabase/schema.sql); a stale
+    // 'starter' + 'active' row must NOT unlock premium. This matches the
+    // server-side isLocked check in app/full-page/page.tsx so the API and the
+    // page render agree — otherwise useEntitlement.resolveSuccess would fire
+    // window.location.reload() against a page that re-renders locked, looping
+    // indefinitely.
+    if (!tenant || tenant.status !== 'active' || tenant.plan !== 'premium') {
       return { status: 'tenant_no_subscription' };
     }
 

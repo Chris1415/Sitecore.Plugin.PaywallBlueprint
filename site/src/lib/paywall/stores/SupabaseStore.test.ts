@@ -85,8 +85,26 @@ describe('SupabaseStore.getEntitlement (ADR-0011 tenant-only evaluator)', () => 
     expect(result).toEqual({ status: 'tenant_no_subscription' });
   });
 
-  // Test 3 — Tenant found AND status === 'active'
-  it('returns allowed when tenant status is active', async () => {
+  // Test 3 — Tenant found AND status === 'active' AND plan === 'premium'
+  it('returns allowed when tenant status is active AND plan is premium', async () => {
+    const client = makeSupabaseStub({
+      tenant_id: 'tenant-A',
+      status: 'active',
+      plan: 'premium',
+      seats_total: 1,
+    });
+    store = new SupabaseStore(client);
+
+    const result = await store.getEntitlement('tenant-A', 'user-X');
+
+    expect(result).toEqual({ status: 'allowed' });
+  });
+
+  // Test 3b — Tenant active but on a non-premium plan must NOT unlock.
+  // Schema default is plan='starter'; this guards against a stale row
+  // unlocking premium and causing a reload loop against the page-level
+  // isLocked check (which also requires plan === 'premium').
+  it('returns tenant_no_subscription when status is active but plan is not premium', async () => {
     const client = makeSupabaseStub({
       tenant_id: 'tenant-A',
       status: 'active',
@@ -97,7 +115,7 @@ describe('SupabaseStore.getEntitlement (ADR-0011 tenant-only evaluator)', () => 
 
     const result = await store.getEntitlement('tenant-A', 'user-X');
 
-    expect(result).toEqual({ status: 'allowed' });
+    expect(result).toEqual({ status: 'tenant_no_subscription' });
   });
 
   // Test 4 — Supabase client rejects → getEntitlement rejects (no internal try/catch)
@@ -119,7 +137,7 @@ describe('SupabaseStore.getEntitlement (ADR-0011 tenant-only evaluator)', () => 
     const client = makeSupabaseStub({
       tenant_id: 'tenant-A',
       status: 'active',
-      plan: 'starter',
+      plan: 'premium',
       seats_total: 1,
     });
     store = new SupabaseStore(client);

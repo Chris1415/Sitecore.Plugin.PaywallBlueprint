@@ -83,6 +83,17 @@ export function useEntitlement(): UseEntitlementReturn {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messageHandlerRef = useRef<((e: MessageEvent) => void) | null>(null);
 
+  // checkoutInFlightRef — gates the visibilitychange poll so it only fires
+  // when the user has actually started a checkout this session. Without this
+  // gate, every iframe visibility blip (Cloud Portal focus shift, tab
+  // switch, devtools toggle) calls pollOnce, and if the API returns
+  // 'allowed' while the server-rendered page still locks (criteria drift
+  // between SupabaseStore.getEntitlement and fetchTenantsRow), resolveSuccess
+  // fires window.location.reload() → reload loop, mouse freeze, banner flash
+  // = horizontal scroll churn. Set true at triggerCheckout entry, cleared on
+  // outcome (success / timeout / error).
+  const checkoutInFlightRef = useRef(false);
+
   // -------------------------------------------------------------------------
   // stopPolling — clears all three cleanup handles
   // -------------------------------------------------------------------------
@@ -99,6 +110,7 @@ export function useEntitlement(): UseEntitlementReturn {
       window.removeEventListener('message', messageHandlerRef.current);
       messageHandlerRef.current = null;
     }
+    checkoutInFlightRef.current = false;
   }, []);
 
   // -------------------------------------------------------------------------
@@ -180,6 +192,12 @@ export function useEntitlement(): UseEntitlementReturn {
   useEffect(() => {
     if (!tenantId) return;
     const onVisible = () => {
+      // Gate: only poll on visibility change when a checkout is in flight.
+      // Without this gate, spurious iframe visibility events (Cloud Portal
+      // focus management, devtools toggle, tab transitions) would trigger
+      // pollOnce on every load and, when API/page criteria drift, send the
+      // app into an infinite window.location.reload() loop.
+      if (!checkoutInFlightRef.current) return;
       if (document.visibilityState === "visible") {
         void pollOnce();
       }
@@ -211,6 +229,8 @@ export function useEntitlement(): UseEntitlementReturn {
     setError(null);
     // Reset the atomicity latch for a fresh checkout attempt.
     outcomeSettledRef.current = false;
+    // Open the visibility-poll gate for this checkout session.
+    checkoutInFlightRef.current = true;
 
     try {
       // UI tier of the three-tier idempotency-key-version precedence
@@ -255,6 +275,7 @@ export function useEntitlement(): UseEntitlementReturn {
           message: body?.error ?? 'Checkout failed. Please try again.',
         });
         setIsLoading(false);
+        checkoutInFlightRef.current = false;
         return;
       }
 
@@ -265,6 +286,7 @@ export function useEntitlement(): UseEntitlementReturn {
           message: 'Checkout URL missing. Please try again.',
         });
         setIsLoading(false);
+        checkoutInFlightRef.current = false;
         return;
       }
 
@@ -307,6 +329,7 @@ export function useEntitlement(): UseEntitlementReturn {
           err instanceof Error ? err.message : 'Checkout failed. Please try again.',
       });
       setIsLoading(false);
+      checkoutInFlightRef.current = false;
     }
   }, [tenantId, userEmail, pollOnce, resolveTimeout]);
 

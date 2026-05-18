@@ -26,20 +26,19 @@
 .bento-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  /* Only the free-card rows are declared here. The premium-section is a
+     direct child that brings its own internal grid for p1–p6, and is
+     auto-placed into the next available row. Declaring p-rows here too
+     would reserve ~660px of dead scroll height below the free cards. */
   grid-template-rows:
     minmax(200px, auto)
     minmax(200px, auto)
-    minmax(140px, auto)
-    minmax(260px, auto)
-    minmax(200px, auto)
-    minmax(200px, auto);
+    minmax(140px, auto);
   grid-template-areas:
     "f1 f1 f2 f3"
     "f1 f1 f4 f4"
-    "f5 f5 f5 f5"
-    "p1 p1 p2 p3"
-    "p4 p4 p4 p4"
-    "p5 p5 p6 p6";
+    "f5 f5 f5 f5";
+  grid-auto-rows: auto;
   gap: 1rem;          /* gap-4 = 16px */
   padding: 1.5rem;    /* p-6 = 24px */
   max-width: 1440px;
@@ -53,20 +52,12 @@
 .bento-grid > [data-card="f4"] { grid-area: f4; }
 .bento-grid > [data-card="f5"] { grid-area: f5; }
 
-/* Premium section occupies the p-rows as a grid sub-region */
+/* Premium section is a positioning container only — the actual p1–p6 grid
+   lives on .premium-region (its child). Earlier we duplicated the grid here,
+   which reserved ~660px of dead space because .premium-section has no direct
+   p1–p6 children (just .premium-region + the absolute-positioned banner). */
 .bento-grid > .premium-section {
   grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows:
-    minmax(260px, auto)
-    minmax(200px, auto)
-    minmax(200px, auto);
-  grid-template-areas:
-    "p1 p1 p2 p3"
-    "p4 p4 p4 p4"
-    "p5 p5 p6 p6";
-  gap: 1rem;
   position: relative;
 }
 
@@ -217,13 +208,20 @@
 
 /* Locked state: blur + opacity + pointer-events disable */
 /* NOT backdrop-filter (per prd-minimal-002.md § non-negotiables) */
+/* overflow: hidden contains the ::before shimmer (which animates
+   translateX(-100% → 100%) and would otherwise leak past the viewport's
+   right edge every 3s, producing a recurring horizontal scrollbar). */
 .premium-region--locked {
   filter: blur(12px) opacity(0.7);
   pointer-events: none;
   position: relative;
+  overflow: hidden;
 }
 
 /* Shimmer overlay on locked region */
+/* Uses foreground at low alpha so the gradient is visible in BOTH themes —
+   hsl(var(--muted)) is near-white in light mode and the shimmer disappeared
+   on a white card background. */
 .premium-region--locked::before {
   content: "";
   position: absolute;
@@ -231,12 +229,13 @@
   background: linear-gradient(
     90deg,
     transparent,
-    hsl(var(--muted) / 0.12),
+    hsl(var(--foreground) / 0.18),
     transparent
   );
   animation: shimmer 3s ease-in-out infinite;
   pointer-events: none;
   z-index: 1;
+  will-change: transform;
 }
 
 @keyframes shimmer {
