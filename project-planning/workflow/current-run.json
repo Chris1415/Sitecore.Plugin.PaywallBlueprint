@@ -179,7 +179,7 @@
     "branch_name": "prd-002",
     "remote_url": "https://github.com/Chris1415/Sitecore.Plugin.PaywallBlueprint.git",
     "status": "in_progress",
-    "current_tranche": "E",
+    "current_tranche": "E_gate",
     "resumed_from_stage": null
   },
   "smoke_outcomes": {},
