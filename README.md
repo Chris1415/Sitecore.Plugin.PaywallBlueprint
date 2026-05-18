@@ -17,31 +17,25 @@ Portal who want a real, documented reference — not a toy demo.
 
 ## Screenshots
 
-Captured from the running app inside the Sitecore Cloud Portal `xmc:fullscreen` iframe.
+Captured from the running app inside the Sitecore Cloud Portal `xmc:fullscreen` iframe (dark theme). PRD-002 replaced the four single-state PRD-000 screens with an 11-card bento dashboard at `/full-page` (5 free real-data cards + 6 fake-data premium cards per ADR-0018). The `<NoSubscriptionState>` / `<AllowedState>` / `<SeatsFullState>` / `<UserUnassignedState>` components stay in the codebase as design reference for adopter forks that want per-seat or assignment flows.
 
-### Allowed — tenant has an active plan
+### Locked — free tier visible, premium blurred
 
-![Allowed state — Welcome with real identity](docs/screenshots/state-allowed.png)
+![Bento dashboard in locked state — 5 free cards live, 6 premium cards blurred behind a centered Subscribe banner](docs/screenshots/bento-locked-dark.png)
 
-Renders when `SupabaseStore.getEntitlement(marketplaceAppTenantId, …)` returns `{ status: 'allowed' }`. The welcome heading and tenant name are sourced live from `host.user.given_name` and `application.context.resourceAccess[0].tenantDisplayName` (defensive fallback chain per FR-9).
+5 free cards (Welcome, Sites, Plan, User profile, Tenant info) render real tenant data from `host.user`, `application.context`, `xmc.sites.listSites`, and the Supabase `tenants` row. The 6 premium cards mount as placeholder silhouettes under `filter: blur(12px)` per ADR-0018. The Subscribe banner sits as a **sibling** of the blurred region (POC v2 § 7 canonical structure) so it stays readable above the rasterized children — making it a child of the region would have inherited the parent's blur filter and rendered the banner unreadable.
 
-### No subscription — tenant has no active plan
+### Unlocked — full premium tier revealed after €0.99 lifetime payment
 
-![No subscription state — Start your subscription](docs/screenshots/state-no-subscription.png)
+![Bento dashboard in unlocked state — all 11 cards visible with Recharts activity chart, KPI counters, progress bars, content health ring and forecast sparkline](docs/screenshots/bento-unlocked-dark.png)
 
-Renders when the `tenants` row is missing or `status !== 'active'`. Clicking **View plans** opens a placeholder dialog (€0.99 lifetime); PRD-001 replaces it with a real Stripe Checkout flow.
+All 11 cards visible after Stripe Checkout success → iframe reload → entitlement evaluates to `allowed`. Premium cards stagger-in over 600 ms with 100 ms per-card delays following DOM = visual reading order (P1 → P6): a Recharts area chart (lazy-loaded ~300 kb chunk), four animated progress bars by template type, a 5-row Sitecore-flavored recent-edits list, four CMS health KPI tiles with `requestAnimationFrame` counters, three hardcoded content-insights bullets, and an SVG progress ring + dashed forecast sparkline. Premium content is intentionally fake per ADR-0018 — adopters who fork the blueprint are expected to swap in their own real-data hooks and add server-side entitlement enforcement (see § "Production hardening for adopters" in `site/README.md`).
 
-### Seats full — design-reference (PRD-000 evaluator never produces this)
+### Stripe Checkout — €0.99 lifetime
 
-![Seats full state — All seats in use](docs/screenshots/state-seats-full.png)
+![Stripe Checkout sandbox page for Paywall Blueprint Premium — €0.99 one-time payment with Card / Link / Amazon Pay / MB WAY / Klarna / Bancontact payment methods](docs/screenshots/stripe-checkout.png)
 
-A design-reference component shipped for adopters and for PRD-002 to wire. PRD-000 evaluator is tenant-only per [ADR-0011](project-planning/ADR/adr-0011-tenant-only-entitlement-prd000.md); rendered via the in-page dev picker or `?previewState=seats-full`.
-
-### User unassigned — design-reference (PRD-000 evaluator never produces this)
-
-![User unassigned state — Ask your team admin](docs/screenshots/state-unassigned.png)
-
-Second design-reference component. No CTA in PRD-000 (deliberate per PRD US-3 — disabled buttons read as broken to adopters). PRD-002 adds the "Request seat" notification flow.
+Stripe-hosted checkout opens in a new tab after the user clicks Subscribe in the bento's Unlock banner. Line item: *Paywall Blueprint Premium — Lifetime access to premium content for your tenant. One-time payment, unlimited seats.* On successful payment Stripe redirects to `/paywall-return`; the iframe's `useEntitlement` hook detects the entitlement flip via `visibilitychange` + 3 s polling and triggers `window.location.reload()` → the bento re-renders unlocked. The `processed_events` idempotency cache + `${id}:${PARAMS_VERSION}` keying (PRD-001) prevent duplicate Stripe sessions when the user retries.
 
 ---
 
