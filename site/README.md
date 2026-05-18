@@ -63,3 +63,147 @@ yes '' | npx --yes shadcn@latest add https://blok.sitecore.com/r/marketplace/nex
 ```
 
 The scaffolded `site/next-app/` subdirectory was flattened to `site/` immediately after scaffolding (per `sitecore:setup-marketplace-client-side` flatten step).
+
+## Customizing the bento
+
+### The pattern
+
+`<BentoGrid>` in `site/components/bento/bento-grid.tsx` is the single fetch-orchestration point. It receives `tenantsRow` from the server-rendered RSC (`app/full-page/page.tsx`) and passes typed props down to each card. No fetches occur inside card bodies (NFR-10 — enforced by `test:no-fetch-in-premium`).
+
+The 11 cards live in `site/components/bento/`:
+
+| Slot | Component | Type | Data source |
+|------|-----------|------|-------------|
+| F1 | `<WelcomeHero>` | free | `useHostUser()` + `useAppContext()` |
+| F2 | `<SitesTile>` | free | `client.query('xmc.sites.listSites', …)` |
+| F3 | `<PlanCard>` | free | `tenantsRow` prop (Supabase) |
+| F4 | `<UserProfile>` | free | `useHostUser()` |
+| F5 | `<TenantInfo>` | free | `useAppContext()` |
+| P1–P6 | `<ActivityChart>` … `<ContentHealthScore>` | premium | Hardcoded fake data (ADR-0018) |
+
+### Swap a free card
+
+To replace `<UserProfile>` with a custom card:
+
+```tsx
+// 1. Create your card in site/components/bento/my-card.tsx
+interface MyCardProps {
+  hostUser: ReturnType<typeof useHostUser>;   // or whatever data you need
+  "data-card"?: string;
+}
+export function MyCard({ hostUser, "data-card": dataCard }: MyCardProps) {
+  return (
+    <Card style="outline" elevation="sm" padding="sm" data-card={dataCard}>
+      <p>{hostUser?.given_name}</p>
+    </Card>
+  );
+}
+
+// 2. In bento-grid.tsx, replace <UserProfile … /> with:
+const hostUser = useHostUser();
+// …
+<MyCard hostUser={hostUser} data-card="f4" />
+```
+
+If the card needs data from the hosting tenant context, use `useHostUser()` (identity) or `useAppContext()` (resource access). If it needs Supabase row data, pass an additional prop from the `tenantsRow` argument BentoGrid already receives. Do not add a new fetch inside the card body.
+
+### Swap a premium card with real data
+
+When you have a real entitlement check in place (see "Production hardening" below), you can replace the fake premium data with a real SDK call. The fetch **must happen server-side** (R5b — adopter hardening):
+
+```tsx
+// app/full-page/page.tsx (Server Component)
+import { createMarketplaceXmcClient } from "@sitecore-marketplace-sdk/xmc";
+
+// Guard server-side before fetching
+const entitlementCheck = await checkEntitlement(marketplaceAppTenantId);
+const analyticsData = entitlementCheck.status === "allowed"
+  ? await createMarketplaceXmcClient(…).query("xmc.analytics.getSummary", …)
+  : null;
+
+// Pass as prop to BentoGrid
+<BentoGrid tenantsRow={tenantsRow} analyticsData={analyticsData} />
+```
+
+See `sitecore:marketplace-sdk-xmc` for the full SDK query/envelope shape. The double-unwrap pattern (`result.data?.data`) confirmed at Gate B real-tenant smoke applies to `xmc.sites.listSites` and may apply to other `xmc.*` queries.
+
+### The locked-state DOM structure (CRITICAL)
+
+`<SubscribeBanner>` **MUST stay a sibling of `.premium-region`**, never a child:
+
+```tsx
+// CORRECT (POC v2 § 7 canonical structure)
+<div className="premium-section">
+  <div className="premium-region premium-region--locked">
+    {/* P1–P6 cards */}
+  </div>
+  <SubscribeBanner />   {/* SIBLING — not inside premium-region */}
+</div>
+
+// WRONG — causes blur rasterization
+<div className="premium-region premium-region--locked">
+  {/* P1–P6 cards */}
+  <SubscribeBanner />   {/* CHILD — filter: blur(12px) rasterizes the banner */}
+</div>
+```
+
+If a fork moves the banner inside `.premium-region`, the `filter: blur(12px)` applied to that element will rasterize the banner text, making it unreadable. The structural regression test in `bento-grid.test.tsx` (`banner.closest('.premium-region') is null`) guards this invariant.
+
+### Card visual conventions
+
+All bento cards use:
+
+- **Container:** `<Card style="outline" elevation="sm" padding="sm">` — gives the bento aesthetic (no fill, visible border, compact padding)
+- **Colors:** semantic Blok tokens only (`text-foreground`, `text-primary`, `text-muted-foreground`, `bg-muted`, etc.) — the `test:no-hex-in-bento` script enforces no hex literals in `components/bento/**` and `components/theme-toggle.tsx`
+- **Accent values:** KPI numbers, percentages, chart ring values — use `text-primary` for visual lift
+- **Chart fills:** use `var(--primary)` directly (not `hsl(var(--primary))` — the HSL wrapper is broken syntax for Recharts color props; the Nova preset `--primary` is already a hex value)
+
+## Production hardening for adopters
+
+This blueprint ships with a **showcase posture** — certain dev affordances are always visible and premium data is fake. Before shipping to production, adopters must address the following.
+
+### 1. ThemeToggle visibility (ADR-0016)
+
+The blueprint always renders the `<ThemeToggle>` in the topbar to demonstrate the three-state theme system. In production, gate it behind an environment variable:
+
+```tsx
+// app/full-page/page.tsx — rightSideItems array
+const rightSideItems: RightSideItem[] = [
+  ...(process.env.NEXT_PUBLIC_SHOW_THEME_TOGGLE === "true"
+    ? [{ id: "theme", node: <ThemeToggle /> }]
+    : []),
+  { id: "tenant-id",       node: <TenantIdBadge /> },
+  { id: "paywall-version", node: <PaywallVersionOverride /> },
+];
+```
+
+Set `NEXT_PUBLIC_SHOW_THEME_TOGGLE=true` in your deploy environment when you want the toggle visible to end users (e.g., during a design-polish phase). Omit the variable (or set it to anything other than `"true"`) to hide the toggle in production.
+
+### 2. Premium DOM exposure (ADR-0018 + R5b)
+
+**This is the most important hardening step.** In the blueprint, premium cards (P1–P6) render hardcoded fake data inside the DOM — they are visually blurred, but the markup is present in the HTML source. This is intentional for a showcase, but **unacceptable when you replace fakes with real premium data**.
+
+When adopters replace fake premium content with real tenant data, they MUST gate the fetches server-side:
+
+1. **Check entitlement server-side** before fetching any premium data:
+   ```tsx
+   // app/full-page/page.tsx (Server Component)
+   const entitlement = await fetchEntitlementServerSide(marketplaceAppTenantId);
+   const premiumData = entitlement?.status === "allowed"
+     ? await fetchPremiumData(marketplaceAppTenantId)
+     : null;
+   ```
+
+2. **Return empty/null props from the RSC** if entitlement is not `allowed` — the premium cards receive `null` and render their placeholder silhouettes. Real data never enters the HTML.
+
+3. **Do not use `useEntitlement()` alone as the gate** — the hook drives UI state (locked/unlocked CSS classes) but does not prevent server-rendered markup from containing premium data. The server-side check is the authoritative gate.
+
+A `withEntitlement(handler)` HOF to wrap route handlers is a candidate for a future PRD.
+
+### 3. Production hardening checklist
+
+Operators forking this blueprint for production use can self-audit with this checklist:
+
+1. [ ] `NEXT_PUBLIC_SHOW_THEME_TOGGLE` set to `"true"` only in environments where the toggle is intentionally visible; absent or `"false"` in all others.
+2. [ ] All premium data fetches are gated by a server-side entitlement check (not just `useEntitlement()` on the client) before the RSC fetches or passes data to premium card props.
+3. [ ] `npm run test:no-fetch-in-premium` still exits 0 after any changes to premium card components (confirms no fetch leaked into card bodies).
