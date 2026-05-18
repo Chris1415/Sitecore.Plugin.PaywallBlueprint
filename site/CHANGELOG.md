@@ -28,6 +28,7 @@ All notable changes to Paywall Blueprint are documented here.
 - `useCounter(target, durationMs)` hook at `site/lib/use-counter.ts` — rAF loop + quadratic ease-out + `prefers-reduced-motion` guard (jumps to target immediately when motion is reduced)
 - `test:no-hex-in-bento` npm script — scans `components/bento/**` + `components/theme-toggle.tsx` for hex color literals; exits 1 on any match
 - `test:no-fetch-in-premium` npm script — static grep enforcing ADR-0018 (no `fetch`/`useQuery`/SDK client calls inside P1–P6 card bodies)
+- **DEV-ONLY revoke-access affordance** — `<ResetEntitlementButton>` in topbar `rightSideItems[]` calls `POST /api/dev/reset-entitlement` to drop every tenants row sharing the current `stripe_customer_id` (sweeps orphan rows) + flushes the `processed_events` idempotency cache, then reloads the iframe. HARD-REFUSED in production by both the button (renders `null` when `NODE_ENV === "production"`) and the API route (returns 403). Same DCE pattern as `<GatedSectionWithDevPicker>` — verified by `test:dce`. Rationale: fast paywall iteration in dev without round-tripping to the Supabase dashboard
 - **Playwright E2E tests:**
   - `bento-free-tier.spec.ts` — viewport smoke (desktop/tablet/mobile), HTTP 200, SSR content check, reduced-motion assertion, axe-core a11y scan
   - `bento-theme-recharts.spec.ts` — Recharts theme reactivity (host-frame-required tests skipped for standalone CI)

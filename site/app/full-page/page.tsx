@@ -24,6 +24,7 @@ import Topbar, { type RightSideItem } from "@/components/bloks/top-bar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TenantIdBadge } from "@/components/tenant-id-badge";
 import { PaywallVersionOverride } from "@/components/paywall-version-override";
+import { ResetEntitlementButton } from "@/components/reset-entitlement-button";
 import { DemoModeBanner } from "@/src/lib/paywall/DemoModeBanner";
 import { BentoGrid } from "@/components/bento/bento-grid";
 import { createClient } from "@supabase/supabase-js";
@@ -82,10 +83,13 @@ export default async function FullPage({ searchParams }: PageProps) {
 
   // T005: Dev affordances + theme toggle mounted in topbar rightSideItems[]
   // ADR-0016: ThemeToggle always visible (showcase posture — no env-gate).
+  // ResetEntitlementButton is tree-shaken in production builds (renders null
+  // when NODE_ENV === "production"; matching API route returns 403 too).
   const rightSideItems: RightSideItem[] = [
     { id: "theme", content: <ThemeToggle /> as ReactNode },
     { id: "tenant-id", content: <TenantIdBadge /> as ReactNode },
     { id: "paywall-version", content: <PaywallVersionOverride /> as ReactNode },
+    { id: "reset-entitlement", content: <ResetEntitlementButton /> as ReactNode },
   ];
 
   return (
