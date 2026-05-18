@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { HahnSoloFooter } from "@/components/hahn-solo-footer";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,15 +25,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // suppressHydrationWarning: next-themes mutates the class attribute on <html>
+    // after server render; this suppresses the React hydration mismatch warning.
+    // See: https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* MarketplaceProvider moved into per-extension-point nested layouts
-            (e.g. app/full-page/layout.tsx) so the root IntroPage at `/` can
-            render without being blocked by the SDK iframe handshake. */}
-        {children}
-        <HahnSoloFooter />
+        <ThemeProvider>
+          {/* MarketplaceProvider moved into per-extension-point nested layouts
+              (e.g. app/full-page/layout.tsx) so the root IntroPage at `/` can
+              render without being blocked by the SDK iframe handshake. */}
+          {children}
+          <HahnSoloFooter />
+        </ThemeProvider>
       </body>
     </html>
   );

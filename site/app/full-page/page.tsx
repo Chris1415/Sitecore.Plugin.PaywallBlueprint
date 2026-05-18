@@ -7,78 +7,108 @@
  * `xmc:fullscreen`. Direct browser preview at `/full-page` shows the same
  * shell so developers can iterate without the iframe roundtrip.
  *
- * Owns the freemium demo: paywall gate (4 UX states + dev picker) + free
- * section. Root `/` now renders the public IntroPage (marketing landing),
- * which is unblocked by the SDK handshake — see app/layout.tsx note.
+ * PRD-002 (T017): BentoGrid replaces FreeSection + Separator + GatedSectionWithDevPicker.
+ * Dev affordances (TenantIdBadge, PaywallVersionOverride) and ThemeToggle
+ * now mount in Topbar's rightSideItems[] per T005 (ADR-0016).
  *
- * Layout source of truth: pocs/poc-v1-prd000/state-allowed.html
+ * tenantsRow: fetched server-side via SupabaseStore from marketplaceAppTenantId
+ * search param (Cloud Portal pattern). Passed as prop to <BentoGrid>.
  *
  * sitecore:marketplace-sdk-extension-routes — single xmc:fullscreen route at `/full-page`
- * sitecore:blok-components — Topbar, Separator
+ * sitecore:blok-components — Topbar
  * sitecore:blok-theming — bg-background, text-foreground, semantic tokens only
  */
 
-import Topbar from "@/components/bloks/top-bar";
-import { Separator } from "@/components/ui/separator";
-import { FreeSection } from "@/components/free-section";
-import { GatedSectionWithDevPicker } from "@/components/gated-section-with-dev-picker";
+import type { ReactNode } from "react";
+import Topbar, { type RightSideItem } from "@/components/bloks/top-bar";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { TenantIdBadge } from "@/components/tenant-id-badge";
 import { PaywallVersionOverride } from "@/components/paywall-version-override";
 import { DemoModeBanner } from "@/src/lib/paywall/DemoModeBanner";
-import {
-  isValidPreviewState,
-  type PreviewState,
-} from "@/src/lib/paywall/preview-state";
+import { BentoGrid } from "@/components/bento/bento-grid";
+import { createClient } from "@supabase/supabase-js";
+
+// tenantsRow type — matches BentoGridProps.tenantsRow
+interface TenantsRow {
+  plan: string;
+  status: string;
+  created_at: string;
+}
 
 interface PageProps {
-  searchParams?: Promise<{ previewState?: string }>;
+  searchParams?: Promise<{ previewState?: string; marketplaceAppTenantId?: string }>;
+}
+
+/**
+ * fetchTenantsRow — server-side fetch of the tenants row for the given tenantId.
+ * Uses the publishable (anon) key since RLS is permissive in PRD-000 (ADR-0009).
+ * Returns null on any error or when no row found.
+ */
+async function fetchTenantsRow(tenantId: string | undefined): Promise<TenantsRow | null> {
+  if (!tenantId) return null;
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!url || !key) return null;
+
+    const supabase = createClient(url, key);
+    const { data, error } = await supabase
+      .from("tenants")
+      .select("plan, status, created_at")
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return {
+      plan: typeof data.plan === "string" ? data.plan : "free",
+      status: typeof data.status === "string" ? data.status : "",
+      created_at: typeof data.created_at === "string" ? data.created_at : "",
+    };
+  } catch {
+    return null;
+  }
 }
 
 export default async function FullPage({ searchParams }: PageProps) {
   const resolvedParams = await searchParams;
-  const raw = resolvedParams?.previewState;
-  const initialPreviewState: PreviewState =
-    process.env.NODE_ENV !== "production" && isValidPreviewState(raw)
-      ? raw
-      : null;
+  const tenantId = resolvedParams?.marketplaceAppTenantId;
+
+  // Server-side fetch of tenants row — passed to BentoGrid as prop.
+  // On error or missing tenantId, tenantsRow is null (BentoGrid handles gracefully).
+  const tenantsRow = await fetchTenantsRow(tenantId);
+
+  // T005: Dev affordances + theme toggle mounted in topbar rightSideItems[]
+  // ADR-0016: ThemeToggle always visible (showcase posture — no env-gate).
+  const rightSideItems: RightSideItem[] = [
+    { id: "theme", content: <ThemeToggle /> as ReactNode },
+    { id: "tenant-id", content: <TenantIdBadge /> as ReactNode },
+    { id: "paywall-version", content: <PaywallVersionOverride /> as ReactNode },
+  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Application topbar — brandName only; no logo, no nav, no user avatar */}
+      {/* Application topbar — dev affordances + theme toggle in rightSideItems (T005) */}
       {/* sitecore:blok-components @blok/topbar */}
       <Topbar
         brandName="Paywall Blueprint"
         menuButton={false}
         navigation={[]}
-        rightSideItems={[]}
+        rightSideItems={rightSideItems}
       />
 
-      {/* Tranche D (T040): DemoModeBanner — rendered when env-flag is 'false' (ADR-0004) */}
-      {/* NEXT_PUBLIC_* vars are inlined at build time; string === 'false' is correct check */}
+      {/* DemoModeBanner — rendered when paywall is disabled (ADR-0004) */}
       {process.env.NEXT_PUBLIC_PAYWALL_ENABLED === "false" && (
         <DemoModeBanner />
       )}
 
-      {/* Page shell — centered, max ~880px wide per UI spec § 3.1 */}
-      <main className="flex-1 max-w-[880px] mx-auto w-full px-6 pt-6 pb-8 flex flex-col gap-6">
-        {/* Developer/operator aid: live tenantId for the seed CLI. */}
-        {/* Renders only when SDK context has resolved; safe in prod (tenantId is in iframe URL anyway). */}
-        <TenantIdBadge />
-
-        {/* Operator-facing idempotency-key version override (UI tier).
-            Three-tier precedence: UI > env (STRIPE_CHECKOUT_PARAMS_VERSION) > code default.
-            See StripeProvider.ts JSDoc. Safe to leave in prod — adopters who fork can remove. */}
-        <PaywallVersionOverride />
-
-        {/* Free section — OUTSIDE ErrorBoundary; always renders even when gate throws (NFR-6) */}
-        <FreeSection />
-
-        {/* Separator between free and gated sections */}
-        <Separator />
-
-        {/* Gated section + dev state picker (picker is tree-shaken in production) */}
-        {/* GatedSectionWithDevPicker owns ErrorBoundary + GatedSection internally */}
-        <GatedSectionWithDevPicker initialPreviewState={initialPreviewState} />
+      {/* PRD-002 T017: BentoGrid replaces FreeSection + Separator + GatedSectionWithDevPicker.
+          Legacy state components (FreeSection, GatedSectionWithDevPicker, etc.) remain in
+          the codebase as design-reference per PRD-002 § FR-1.4. */}
+      <main className="flex-1 w-full">
+        <BentoGrid tenantsRow={tenantsRow} />
       </main>
     </div>
   );

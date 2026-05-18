@@ -1,0 +1,280 @@
+/**
+ * bento.css — Grid templates, keyframes, and locked-state effects for the bento dashboard.
+ *
+ * T007 — PRD-002 Tranche A foundation CSS.
+ * Imported by site/components/bento/bento-grid.tsx.
+ *
+ * ZERO hex literals. All colors via hsl(var(--…)) or currentColor.
+ * Enforced by: npm run test:no-hex-in-bento (T006).
+ *
+ * Visual source of truth: pocs/poc-v2-prd002/index.html + styles.css
+ * When this file diverges from the POC, the POC wins (prd-minimal-002.md § Key constraints).
+ *
+ * Grid areas:
+ *   Row 1: f1 f1 f2 f3   (Welcome hero 2×2 left, Sites tile, Plan card)
+ *   Row 2: f1 f1 f4 f4   (Welcome hero continued, User profile 2-col)
+ *   Row 3: f5 f5 f5 f5   (Tenant info — full-width strip)
+ *   Row 4: p1 p1 p2 p3   (Activity chart hero 2×1, Content dist, Recent edits)
+ *   Row 5: p4 p4 p4 p4   (CMS health KPI strip — full-width)
+ *   Row 6: p5 p5 p6 p6   (Content insights, Content health score)
+ */
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Desktop grid (≥1024px)
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows:
+    minmax(200px, auto)
+    minmax(200px, auto)
+    minmax(140px, auto)
+    minmax(260px, auto)
+    minmax(200px, auto)
+    minmax(200px, auto);
+  grid-template-areas:
+    "f1 f1 f2 f3"
+    "f1 f1 f4 f4"
+    "f5 f5 f5 f5"
+    "p1 p1 p2 p3"
+    "p4 p4 p4 p4"
+    "p5 p5 p6 p6";
+  gap: 1rem;          /* gap-4 = 16px */
+  padding: 1.5rem;    /* p-6 = 24px */
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
+/* Per-card area assignments — matched by data-card attribute */
+.bento-grid > [data-card="f1"] { grid-area: f1; }
+.bento-grid > [data-card="f2"] { grid-area: f2; }
+.bento-grid > [data-card="f3"] { grid-area: f3; }
+.bento-grid > [data-card="f4"] { grid-area: f4; }
+.bento-grid > [data-card="f5"] { grid-area: f5; }
+
+/* Premium section occupies the p-rows as a grid sub-region */
+.bento-grid > .premium-section {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows:
+    minmax(260px, auto)
+    minmax(200px, auto)
+    minmax(200px, auto);
+  grid-template-areas:
+    "p1 p1 p2 p3"
+    "p4 p4 p4 p4"
+    "p5 p5 p6 p6";
+  gap: 1rem;
+  position: relative;
+}
+
+.bento-grid > .premium-section > .premium-region,
+.bento-grid > .premium-section > .premium-region--locked {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows:
+    minmax(260px, auto)
+    minmax(200px, auto)
+    minmax(200px, auto);
+  grid-template-areas:
+    "p1 p1 p2 p3"
+    "p4 p4 p4 p4"
+    "p5 p5 p6 p6";
+  gap: 1rem;
+}
+
+.bento-grid [data-card="p1"] { grid-area: p1; }
+.bento-grid [data-card="p2"] { grid-area: p2; }
+.bento-grid [data-card="p3"] { grid-area: p3; }
+.bento-grid [data-card="p4"] { grid-area: p4; }
+.bento-grid [data-card="p5"] { grid-area: p5; }
+.bento-grid [data-card="p6"] { grid-area: p6; }
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Tablet grid (768px – 1023.98px)
+   2-column layout: free cards reflow; premium stays grouped
+   ──────────────────────────────────────────────────────────────────────────── */
+
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas:
+      "f1 f1"
+      "f2 f3"
+      "f4 f4"
+      "f5 f5";
+    gap: 0.75rem;   /* gap-3 = 12px */
+  }
+
+  .bento-grid > .premium-section {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas:
+      "p1 p1"
+      "p2 p3"
+      "p4 p4"
+      "p5 p6";
+  }
+
+  .bento-grid > .premium-section > .premium-region,
+  .bento-grid > .premium-section > .premium-region--locked {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas:
+      "p1 p1"
+      "p2 p3"
+      "p4 p4"
+      "p5 p6";
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Mobile grid (≤767.98px)
+   Single column — all cards stack vertically
+   ──────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 767.98px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      "f1"
+      "f2"
+      "f3"
+      "f4"
+      "f5";
+    gap: 0.75rem;   /* gap-3 = 12px */
+    padding: 0.75rem;
+  }
+
+  .bento-grid > .premium-section {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "p1"
+      "p2"
+      "p3"
+      "p4"
+      "p5"
+      "p6";
+  }
+
+  .bento-grid > .premium-section > .premium-region,
+  .bento-grid > .premium-section > .premium-region--locked {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "p1"
+      "p2"
+      "p3"
+      "p4"
+      "p5"
+      "p6";
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Unlock stagger-in animation (v2 — 100ms per-card steps)
+   Applied via .bento-card--premium class on each premium card when unlocked.
+   DOM order MUST match visual reading order (p1→p2→p3→p4→p5→p6) so
+   :nth-child selectors produce the correct per-card delays.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bento-card--premium {
+  animation: fadeUp 600ms ease-out forwards;
+  opacity: 0;
+}
+
+/* Per-card stagger delays — v2 spec uses 100ms steps (0/100/200/300/400/500ms) */
+.bento-card--premium:nth-child(1) { animation-delay: 0ms; }
+.bento-card--premium:nth-child(2) { animation-delay: 100ms; }
+.bento-card--premium:nth-child(3) { animation-delay: 200ms; }
+.bento-card--premium:nth-child(4) { animation-delay: 300ms; }
+.bento-card--premium:nth-child(5) { animation-delay: 400ms; }
+.bento-card--premium:nth-child(6) { animation-delay: 500ms; }
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Locked premium region — blur + pointer-events + shimmer
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* The premium-region wrapper — no locked state, used when entitlement is allowed */
+.premium-region {
+  position: relative;
+}
+
+/* Locked state: blur + opacity + pointer-events disable */
+/* NOT backdrop-filter (per prd-minimal-002.md § non-negotiables) */
+.premium-region--locked {
+  filter: blur(12px) opacity(0.7);
+  pointer-events: none;
+  position: relative;
+}
+
+/* Shimmer overlay on locked region */
+.premium-region--locked::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--muted) / 0.12),
+    transparent
+  );
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Premium section wrapper — contains .premium-region + <SubscribeBanner> as siblings.
+   CRITICAL (POC v2 § 7): banner MUST be a sibling of .premium-region, NOT a child.
+   If the banner is a child, the parent's filter:blur rasterizes it → unreadable.
+   The .premium-section uses position:relative so the absolute-positioned banner
+   can overlay the blurred region correctly.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.premium-section {
+  position: relative;
+  grid-column: 1 / -1;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Reduced motion — remove ALL animations when user prefers reduced motion.
+   JS-driven animations (rAF counters, progress bar fills, SVG ring/sparkline)
+   are handled in their respective components by reading window.matchMedia inside useEffect.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .bento-card--premium {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .premium-region--locked::before {
+    animation: none;
+  }
+}

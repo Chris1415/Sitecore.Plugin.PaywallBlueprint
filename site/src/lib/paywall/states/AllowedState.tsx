@@ -34,22 +34,12 @@ import { Badge } from "@/components/ui/badge";
 import { useAppContext, useHostUser } from "@/components/providers/marketplace";
 
 // ---------------------------------------------------------------------------
-// pickUserDisplay — user display chain (LOCKED per host-user.json $design_decisions)
+// pickUserDisplay — imported from shared util (T011 extraction) + re-exported.
 // source: project-planning/architecture/sdk-fixtures/host-user.json ($design_decisions)
-// Moved from components/gated-section.tsx — same logic, same signatures.
+// Extracted to site/src/lib/paywall/pickUserDisplay.ts for reuse by WelcomeHero (F1).
 // ---------------------------------------------------------------------------
-export function pickUserDisplay(user: Record<string, unknown>): string {
-  if (user?.given_name && typeof user.given_name === "string") {
-    return user.given_name;
-  }
-  if (user?.name && typeof user.name === "string") {
-    return user.name;
-  }
-  if (user?.email && typeof user.email === "string") {
-    return user.email.split("@")[0];
-  }
-  return "there";
-}
+import { pickUserDisplay } from "@/src/lib/paywall/pickUserDisplay";
+export { pickUserDisplay };
 
 // ---------------------------------------------------------------------------
 // pickTenantDisplay — tenant display chain (LOCKED per application-context.json $design_decisions)

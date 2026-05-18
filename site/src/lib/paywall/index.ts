@@ -18,6 +18,13 @@ export { PaywallGate } from './PaywallGate';
 export { PaywallCheckoutDialog } from './PaywallCheckoutDialog';
 export { DemoModeBanner } from './DemoModeBanner';
 
+// BentoGrid orchestrator — T064 (PRD-002)
+// Adopters import this from the barrel to use the full dashboard.
+// Individual cards (WelcomeHero, SitesTile, etc.) are deep-imported when
+// swapping a single card, e.g.:
+//   import { WelcomeHero } from "@/components/bento/welcome-hero";
+export { BentoGrid } from '@/components/bento/bento-grid';
+
 // ---------------------------------------------------------------------------
 // State components (forward-compat; PRD-000-locked; untouched in PRD-001)
 // ---------------------------------------------------------------------------
