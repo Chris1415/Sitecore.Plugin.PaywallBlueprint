@@ -4,6 +4,25 @@ This is the Next.js application for the Paywall Blueprint Sitecore Marketplace A
 
 For the full OSS-facing README including quickstart, adoption guide, and swap-points, see `products/paywall-blueprint/README.md` (written at Tranche E).
 
+## Screenshots
+
+The bento dashboard at `/full-page` in a real Sitecore Cloud Portal tenant (dark theme).
+
+### Locked — free tier visible, premium blurred
+
+![Bento dashboard in locked state — 5 free cards live, 6 premium cards blurred behind a centered Subscribe banner](./docs/screenshots/bento-locked-dark.png)
+*5 free cards (Welcome, Sites, Plan, User profile, Tenant info) render real tenant data. The 6 premium cards mount as placeholder silhouettes under `filter: blur(12px)` per ADR-0018. The Subscribe banner sits as a sibling of the blurred region (POC v2 § 7) so it stays readable above the rasterized children.*
+
+### Unlocked — full premium tier revealed after €0.99 lifetime payment
+
+![Bento dashboard in unlocked state — all 11 cards visible with Recharts activity chart, KPI counters, progress bars, content health ring and forecast sparkline](./docs/screenshots/bento-unlocked-dark.png)
+*All 11 cards visible after Stripe Checkout success → iframe reload → entitlement evaluates to `allowed`. Premium cards stagger-in over 600ms with 100ms per-card delays following DOM = visual reading order (P1 → P6). The Recharts area chart, P2 progress bars, P4 KPI counters, and P6 progress ring all animate on mount.*
+
+### Stripe Checkout — €0.99 lifetime
+
+![Stripe Checkout sandbox page for Paywall Blueprint Premium — €0.99 one-time payment with Card / Link / Amazon Pay / MB WAY / Klarna / Bancontact payment methods](./docs/screenshots/stripe-checkout.png)
+*Stripe-hosted checkout opens in a new tab after the user clicks Subscribe in the bento's Unlock banner. Line item: "Paywall Blueprint Premium — Lifetime access to premium content for your tenant. One-time payment, unlimited seats." On successful payment Stripe redirects to `/paywall-return`; the iframe's `useEntitlement` hook detects the entitlement flip via `visibilitychange` + 3 s polling and triggers `window.location.reload()` → the bento re-renders unlocked.*
+
 ## Local development
 
 This is a **Mode A 4a client-side scaffold** — HTTP on localhost is fully supported. No HTTPS dev server, no mkcert, and no certificate trust dance are required.
