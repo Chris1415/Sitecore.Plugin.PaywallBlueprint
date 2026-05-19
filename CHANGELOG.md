@@ -8,6 +8,40 @@ Each PRD prepends a new entry. Do not edit entries below the most recent one.
 
 ---
 
+## [0.3.0] — 2026-05-18 (PRD-002 — Bento dashboard redesign)
+
+### Added
+
+- **11-card bento dashboard** at `/full-page` replacing the original single-page freemium layout. 5 free cards with real tenant data + 6 premium cards with animated fake/showcase data (ADR-0018).
+- **Free cards:** Welcome hero (real user + tenant identity via `host.user` and `application.context`), Sites tile (live site list via `xmc.sites.listSites`), Plan card (Supabase `tenants` row), User profile (real identity), Tenant info (tenant name, context).
+- **Premium cards (locked state):** placeholder silhouettes with `filter: blur(12px)` + `aria-hidden`. **Unlocked state:** Activity chart (Recharts area, lazy-loaded ~300 kb chunk), Content health (animated progress bars), Recent edits (static Sitecore-flavored list), Engagement metrics (rAF counter animations), AI insights (hardcoded bullets), Engagement score + forecast (SVG ring + sparkline).
+- **Subscribe banner** — sibling of the blurred premium region (not a child), so it stays readable above the rasterized blur.
+- **ThemeToggle** in topbar `rightSideItems[]` — always visible in showcase posture (ADR-0016). 3-state cycle (light / dark / system) via `next-themes`.
+- **`TenantIdBadge`** and **`PaywallVersionOverride`** showcase affordances in topbar.
+- **`useCounter` hook** (`site/src/lib/use-counter.ts`) — requestAnimationFrame ease-out counter with `prefers-reduced-motion` guard.
+- **Dev revoke-access button** — always-visible in the bento for demo/walkthrough convenience.
+- **`pickUserDisplay` util** (`site/src/lib/paywall/pickUserDisplay.ts`) — layered user-identity resolution (name → email local-part → "there").
+- **Playwright e2e tests** — bento free-tier, bento unlocked, theme + Recharts smoke.
+
+### Changed
+
+- `/full-page` page now server-fetches `tenantsRow` and passes it as a prop to `BentoGrid` — locked/unlocked split derived from server-rendered data, not the `useEntitlement` hook (which does not poll on initial mount).
+- `MarketplaceProvider` scope confirmed at full-page layout level (not root layout).
+- `processed_events` table: `tenant_id TEXT` column added (ADR-0017, nullable; pre-migration rows stay NULL).
+
+### Decisions (ADRs)
+
+- **ADR-0016** — Theme toggle always visible in topbar for showcase posture; adopters env-gate for production.
+- **ADR-0017** — `processed_events.tenant_id` column design (deferred — card that consumed it was dropped during UI iteration, but the migration was applied; column is present for future use).
+- **ADR-0018** — Premium bento cards ship 100% fake data. No fetches at any state. Adopters who add real data must add server-side enforcement.
+
+### Deferred
+
+- **ADR-0017 per-tenant activity card** — dropped during PRD-002 UI iteration in favour of User profile and Tenant info free cards. PRD-005 candidate.
+- **PRD-003** — Stripe Customer Portal wraps (cancel / plan-change). `/api/portal` remains a 501 stub.
+
+---
+
 ## [0.2.0] — 2026-05-17 (PRD-001 — Stripe integration)
 
 ### Added
@@ -207,3 +241,18 @@ Each PRD prepends a new entry. Do not edit entries below the most recent one.
 ---
 
 <!-- New PRDs prepend their entry above this line -->
+
+---
+
+## Roadmap
+
+PRD-000 is the foundation. Each subsequent PRD adds one layer and ships with a real-tenant smoke gate before the next one starts.
+
+| PRD | What ships | Status |
+|-----|-----------|--------|
+| **PRD-000** | `<PaywallGate>` + 4 UX states + Supabase adapter + tenant-only evaluator + OSS launch surface | Shipped 2026-05-14 |
+| **PRD-001** | Stripe Checkout + webhook handler + Customer Portal link + idempotency | Shipped 2026-05-17 |
+| **PRD-002** | 11-card bento dashboard + theme toggle + fake premium content showcase | Shipped 2026-05-18 |
+| **PRD-003** | Stripe Customer Portal wraps for cancel / plan-change (one-call surface via PRD-001 adapter) | Planned |
+
+Post-PRD-003: public Marketplace listing submission and second-provider adapters (Paddle, Polar.sh, Lemon Squeezy).
