@@ -1,4 +1,4 @@
-{
+﻿{
   "schema_version": 6,
   "run_id": "20260517T223000Z",
   "created_at": "2026-05-17T22:30:00Z",
@@ -20,11 +20,11 @@
     "proposal_count": 2,
     "divergence": "moderate",
     "variant_paths": [
-      "products/paywall-blueprint/project-planning/ui-design/ui-design-20260517T223000Z-v1.md",
-      "products/paywall-blueprint/project-planning/ui-design/ui-design-20260517T223000Z-v2.md"
+      "products/marketplace/paywall-blueprint/project-planning/ui-design/ui-design-20260517T223000Z-v1.md",
+      "products/marketplace/paywall-blueprint/project-planning/ui-design/ui-design-20260517T223000Z-v2.md"
     ],
-    "selected_variant_path": "products/paywall-blueprint/project-planning/ui-design/ui-design-20260517T223000Z-v2.md",
-    "selected_poc_path": "products/paywall-blueprint/pocs/poc-v2-prd002/"
+    "selected_variant_path": "products/marketplace/paywall-blueprint/project-planning/ui-design/ui-design-20260517T223000Z-v2.md",
+    "selected_poc_path": "products/marketplace/paywall-blueprint/pocs/poc-v2-prd002/"
   },
   "source": {
     "kind": "raw_idea",
@@ -41,36 +41,36 @@
   },
   "canonical_artifacts": {
     "brain_dump": null,
-    "prd": "products/paywall-blueprint/project-planning/PRD/prd-002.md",
-    "prd_minimal": "products/paywall-blueprint/project-planning/PRD/prd-minimal-002.md",
+    "prd": "products/marketplace/paywall-blueprint/project-planning/PRD/prd-002.md",
+    "prd_minimal": "products/marketplace/paywall-blueprint/project-planning/PRD/prd-minimal-002.md",
     "architecture": null,
-    "task_breakdown": "products/paywall-blueprint/project-planning/plans/task-breakdown-20260517T223000Z.md",
+    "task_breakdown": "products/marketplace/paywall-blueprint/project-planning/plans/task-breakdown-20260517T223000Z.md",
     "task_breakdown_pre_qa": null,
     "qa_report": null,
-    "implementation_runbook": "products/paywall-blueprint/project-planning/plans/implementation-runbook-20260517T223000Z.md",
+    "implementation_runbook": "products/marketplace/paywall-blueprint/project-planning/plans/implementation-runbook-20260517T223000Z.md",
     "content_model": null,
     "content_examples": null,
     "ship_report": null,
     "friction_log": null,
     "adrs": [
-      "products/paywall-blueprint/project-planning/ADR/adr-0001-use-adrs-as-architecture-backbone.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0002-entitlement-store-interface-split.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0003-payment-provider-adapter-placeholder.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0004-env-flag-signaled-passthrough.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0005-scaffold-architecture-4a-client-side.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0006-custom-app-registration.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0007-single-generic-skeleton.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0008-context-readiness-via-provider-resolution.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0009-supabase-rls-permissive-default.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0010-supabase-setup-via-sql-block.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0011-tenant-only-entitlement-prd000.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0012-stripe-price-model-one-time-lifetime.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0013-scaffold-migration-4a-to-4b-prd001.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0014-iframe-success-return-postmessage-polling.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0015-stripe-customer-orphan-recovery.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0016-theme-toggle-always-visible-showcase.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0017-processed-events-tenant-id-column.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0018-premium-fake-data-blueprint-posture.md"
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0001-use-adrs-as-architecture-backbone.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0002-entitlement-store-interface-split.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0003-payment-provider-adapter-placeholder.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0004-env-flag-signaled-passthrough.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0005-scaffold-architecture-4a-client-side.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0006-custom-app-registration.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0007-single-generic-skeleton.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0008-context-readiness-via-provider-resolution.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0009-supabase-rls-permissive-default.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0010-supabase-setup-via-sql-block.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0011-tenant-only-entitlement-prd000.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0012-stripe-price-model-one-time-lifetime.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0013-scaffold-migration-4a-to-4b-prd001.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0014-iframe-success-return-postmessage-polling.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0015-stripe-customer-orphan-recovery.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0016-theme-toggle-always-visible-showcase.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0017-processed-events-tenant-id-column.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0018-premium-fake-data-blueprint-posture.md"
     ]
   },
   "architecture": {
@@ -86,7 +86,7 @@
     ]
   },
   "friction_log": {
-    "path": "products/paywall-blueprint/project-planning/workflow/friction-log-20260517T223000Z.md",
+    "path": "products/marketplace/paywall-blueprint/project-planning/workflow/friction-log-20260517T223000Z.md",
     "min_severity": "medium",
     "enabled": true
   },
@@ -206,7 +206,7 @@
       "exited_at": "2026-05-18T14:10:00Z",
       "outcome": "completed",
       "error": null,
-      "notes": "PRD-002 SHIPPED. 4 PRs merged to main on 2026-05-18: #8 (bento + dev revoke + planning, df4e5be), #9 (site/README screenshots, d47cac8), #10 (repo-root README refresh, 166fc03), #11 (live Cloud Portal screenshot swap, 5fb144f). Vercel production at https://sitecore-plugin-paywall-blueprint.vercel.app/. 11-card bento dashboard live at /full-page; €0.99 Stripe checkout flow PRD-001-locked; revoke-access dev affordance always-on (demo-app posture). 234 tests passing. Operator confirmed 2026-05-18T14:10Z: 'all good now works perfect. We can close this prd'."
+      "notes": "PRD-002 SHIPPED. 4 PRs merged to main on 2026-05-18: #8 (bento + dev revoke + planning, df4e5be), #9 (site/README screenshots, d47cac8), #10 (repo-root README refresh, 166fc03), #11 (live Cloud Portal screenshot swap, 5fb144f). Vercel production at https://sitecore-plugin-paywall-blueprint.vercel.app/. 11-card bento dashboard live at /full-page; â‚¬0.99 Stripe checkout flow PRD-001-locked; revoke-access dev affordance always-on (demo-app posture). 234 tests passing. Operator confirmed 2026-05-18T14:10Z: 'all good now works perfect. We can close this prd'."
     }
   ],
   "implementation": {

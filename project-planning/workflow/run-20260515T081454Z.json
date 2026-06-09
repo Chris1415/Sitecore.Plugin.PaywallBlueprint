@@ -1,4 +1,4 @@
-{
+﻿{
   "schema_version": 6,
   "run_id": "20260515T081454Z",
   "created_at": "2026-05-15T08:14:54Z",
@@ -25,7 +25,7 @@
   "source": {
     "kind": "raw_idea",
     "values": [
-      "/create-prd wrapper 2026-05-15: PRD-001 — Stripe direct integration on the SHIPPED paywall-blueprint product. Replaces PaywallCheckoutDialog placeholder with real stripe.checkout.sessions.create() flow.",
+      "/create-prd wrapper 2026-05-15: PRD-001 â€” Stripe direct integration on the SHIPPED paywall-blueprint product. Replaces PaywallCheckoutDialog placeholder with real stripe.checkout.sessions.create() flow.",
       "Reference: storage/paywall-providers-research-2026-05-13.md \u00a7 8 (Stripe wiring shape; agentic parent repo)",
       "Operator /create-prd discovery 2026-05-15 (DQ1\u2013DQ5)"
     ],
@@ -36,10 +36,10 @@
   },
   "canonical_artifacts": {
     "brain_dump": null,
-    "prd": "products/paywall-blueprint/project-planning/PRD/prd-001.md",
-    "prd_minimal": "products/paywall-blueprint/project-planning/PRD/prd-minimal-001.md",
+    "prd": "products/marketplace/paywall-blueprint/project-planning/PRD/prd-001.md",
+    "prd_minimal": "products/marketplace/paywall-blueprint/project-planning/PRD/prd-minimal-001.md",
     "architecture": null,
-    "task_breakdown": "products/paywall-blueprint/project-planning/plans/task-breakdown-20260515T081454Z.md",
+    "task_breakdown": "products/marketplace/paywall-blueprint/project-planning/plans/task-breakdown-20260515T081454Z.md",
     "task_breakdown_pre_qa": null,
     "qa_report": null,
     "implementation_runbook": null,
@@ -48,21 +48,21 @@
     "ship_report": null,
     "friction_log": null,
     "adrs": [
-      "products/paywall-blueprint/project-planning/ADR/adr-0001-use-adrs-as-architecture-backbone.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0002-entitlement-store-interface-split.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0003-payment-provider-adapter-placeholder.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0004-env-flag-signaled-passthrough.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0005-scaffold-architecture-4a-client-side.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0006-custom-app-registration.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0007-single-generic-skeleton.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0008-context-readiness-via-provider-resolution.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0009-supabase-rls-permissive-default.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0010-supabase-setup-via-sql-block.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0011-tenant-only-entitlement-prd000.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0012-stripe-price-model-one-time-lifetime.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0013-scaffold-migration-4a-to-4b-prd001.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0014-iframe-success-return-postmessage-polling.md",
-      "products/paywall-blueprint/project-planning/ADR/adr-0015-stripe-customer-orphan-recovery.md"
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0001-use-adrs-as-architecture-backbone.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0002-entitlement-store-interface-split.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0003-payment-provider-adapter-placeholder.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0004-env-flag-signaled-passthrough.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0005-scaffold-architecture-4a-client-side.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0006-custom-app-registration.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0007-single-generic-skeleton.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0008-context-readiness-via-provider-resolution.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0009-supabase-rls-permissive-default.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0010-supabase-setup-via-sql-block.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0011-tenant-only-entitlement-prd000.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0012-stripe-price-model-one-time-lifetime.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0013-scaffold-migration-4a-to-4b-prd001.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0014-iframe-success-return-postmessage-polling.md",
+      "products/marketplace/paywall-blueprint/project-planning/ADR/adr-0015-stripe-customer-orphan-recovery.md"
     ]
   },
   "architecture": {
@@ -70,7 +70,7 @@
       {
         "type": "xmc:fullscreen",
         "route": "/full-page",
-        "displayLabel": "Full screen — SitecoreAI",
+        "displayLabel": "Full screen â€” SitecoreAI",
         "registered": true,
         "registered_at": "2026-05-13T20:55:00Z",
         "notes": "Inherited from PRD-000; unchanged in PRD-001. App is still SitecoreAI Full Screen single-page; PRD-001 adds server-side API routes via 4a\u21924b migration but no new extension points."
@@ -78,7 +78,7 @@
     ]
   },
   "friction_log": {
-    "path": "products/paywall-blueprint/project-planning/workflow/friction-log-20260515T081454Z.md",
+    "path": "products/marketplace/paywall-blueprint/project-planning/workflow/friction-log-20260515T081454Z.md",
     "min_severity": "medium",
     "enabled": true
   },
@@ -242,7 +242,7 @@
     "status": "tranche_d_passed_G1_G2_met",
     "current_tranche": "E",
     "resumed_from_stage": null,
-    "runbook": "products/paywall-blueprint/project-planning/plans/implementation-runbook-20260515T081454Z.md",
+    "runbook": "products/marketplace/paywall-blueprint/project-planning/plans/implementation-runbook-20260515T081454Z.md",
     "merged_pr": {
       "number": 2,
       "merged_at": "2026-05-17T12:15:47Z",
