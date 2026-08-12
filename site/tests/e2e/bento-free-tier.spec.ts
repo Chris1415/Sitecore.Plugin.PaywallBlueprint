@@ -1,30 +1,11 @@
 /**
- * T019 — Free-tier theme + responsive Playwright smoke.
+ * Free-tier theme + responsive smoke.
  *
- * PRD-002 Tranche B.
- *
- * IMPORTANT: The /full-page route is a Marketplace SDK app that requires the
- * Cloud Portal parent frame to complete SDK handshake. In standalone browser
- * access (dev server), MarketplaceProvider renders null until the SDK resolves.
- *
- * As a result, visual smoke tests for bento-grid content MUST be run inside
- * the Cloud Portal host frame (operator Gate B). The tests below cover what
- * IS testable standalone: page load, SDK loading state, no JS exceptions.
- *
- * Full visual baseline screenshots (bento-grid with real data) are captured
- * at Gate B by the operator per sitecore:marketplace-sdk-host-frame-testing.
- *
- * Tests that require host frame are marked with host-frame-required comment.
- * They will be updated at Tranche D (T052) with proper host-frame patterns.
- *
- * Tests:
- *   - Page loads without JS crashes
- *   - No critical console errors on load
- *   - ThemeToggle present after SDK handshake (host-frame-required for bento content)
- *   - prefers-reduced-motion: .bento-card--premium has animation-name: none (when cards present)
- *
- * Screenshots stored under tests/e2e/__screenshots__/ as baselines.
- * Baseline screenshots of full bento (with SDK data) are operator-captured at Gate B.
+ * ⚠ Only asserts what a STANDALONE browser can actually observe (page load, SDK
+ * loading state, no JS exceptions). Every route needs the Cloud Portal parent
+ * frame to complete the SDK handshake, so bento content is unreachable here and
+ * its checks are operator-captured in the host frame instead.
+ * See docs/build-decisions.md#host-frame-required.
  */
 
 import { test, expect } from "@playwright/test";

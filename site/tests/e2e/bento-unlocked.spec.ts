@@ -1,40 +1,11 @@
 /**
- * T050 — Tranche D Playwright POC visual smoke spec.
+ * Unlocked-premium visual smoke against the winning POC clickdummy.
  *
- * PRD-002 Tranche D — visual regression of the unlocked premium bento
- * against the winning POC clickdummy (pocs/poc-v2-prd002/).
- *
- * Architecture:
- *   - Dev server: https://localhost:3000 (HTTPS, mkcert self-signed)
- *   - POC server: served via `npx serve pocs/poc-v2-prd002/ --listen 5180`
- *                 (HTTP, no TLS; Playwright can access both)
- *
- * IMPORTANT: The /full-page route requires the Cloud Portal SDK handshake.
- * In standalone browser (no Cloud Portal parent frame), the MarketplaceProvider
- * renders null until the SDK resolves. The bento unlocked state with real
- * premium content CANNOT be captured in standalone mode.
- *
- * Per sitecore:marketplace-sdk-host-frame-testing, the canonical visual smoke
- * for Marketplace apps is inside the live Cloud Portal host frame.
- *
- * These automated tests cover what IS possible standalone:
- *   1. The dev server page loads without JS exceptions
- *
- * Host-frame-required (Gate D operator smoke):
- *   2. BentoGrid data-testid visible (requires SDK handshake)
- *   3. Visual diff POC vs live at 1440×900 light + dark
- *
- * Full unlocked visual diff (POC vs live) MUST be performed by the operator
- * at Gate D inside the Cloud Portal host frame. Screenshots are captured there
- * and compared against pocs/poc-v2-prd002/ as the visual ground truth.
- *
- * If any meaningful divergence is found at operator Gate D, it is recorded
- * as "POC drift" finding and routed back through /architect step 3.
- * Do NOT silently promote the live render as the new baseline.
- *
- * POC server setup (operator precondition for visual comparison):
- *   npx serve products/paywall-blueprint/pocs/poc-v2-prd002/ --listen 5180
- * Then navigate http://localhost:5180 to view the canonical reference.
+ * ⚠ Standalone can only prove the page loads without exceptions. The visual
+ * diff is operator-captured in the Cloud Portal frame; on divergence, record
+ * POC drift and route it back through /architect — do NOT promote the live
+ * render as the new baseline.
+ * See docs/build-decisions.md#host-frame-required.
  */
 
 import { test, expect } from "@playwright/test";

@@ -1,32 +1,9 @@
 /**
- * T031a — RED locked-state tests for <BentoGrid>
- * T031  — GREEN + REFACTOR phase (after T025–T029 land)
- *
- * TDD: The RED assertions below will FAIL until T026–T029 wire
- * the premium section into BentoGrid.
- *
- * Critical invariants tested:
- *   1. With tenantsRow = null OR plan !== "premium" OR status !== "active":
- *      - .premium-region has class premium-region--locked
- *      - .premium-region has aria-hidden="true"
- *      - 6 <PremiumPlaceholder> instances inside the premium-region wrapper
- *      - <SubscribeBanner> is a SIBLING of .premium-region (NOT a child)
- *      - <SubscribeBanner>'s parent has .premium-section class
- *   2. With tenantsRow.plan === "premium" && tenantsRow.status === "active":
- *      - .premium-region does NOT have class premium-region--locked
- *      - aria-hidden is absent
- *      - <SubscribeBanner> is NOT mounted
- *
- * Gate D 2026-05-18 refactor: BentoGrid uses tenantsRow (server-rendered)
- * as the truth source rather than useEntitlement (client-side, no initial-
- * mount poll). Tests updated accordingly. SubscribeBanner internally still
- * uses useEntitlement for the post-payment polling state machine.
- *
- * T031 additional:
- *   3. Clicking Subscribe inside SubscribeBanner → dialog opens
- *   4. Parent-traversal regression: subscribe-banner.closest('.premium-region') === null
- *
- * sitecore:blok-theming — semantic tokens only; no hex in bento components.
+ * Locked-state invariants. The premium region is aria-hidden while locked and
+ * SubscribeBanner is a SIBLING of it, never a child — a parent-traversal
+ * assertion pins that directly, because nesting it would make the one control
+ * that unlocks the app invisible to assistive tech.
+ * See docs/build-decisions.md#entitlement-truth-source.
  */
 
 import { render, screen } from "@testing-library/react";

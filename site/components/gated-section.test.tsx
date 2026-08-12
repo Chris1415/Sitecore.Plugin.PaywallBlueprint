@@ -1,27 +1,7 @@
 /**
- * gated-section.test.tsx — T024a RED tests (TDD)
- *
- * Tests MUST FAIL until T023 implements the defensive layered render.
- * The failure confirms the test assertions are correct before the impl lands.
- *
- * Mocks both useAppContext() (application.context) and useHostUser() (host.user).
- * Both hooks are exported from @/components/providers/marketplace per T023's
- * expansion of the MarketplaceProvider.
- *
- * LOCKED DESIGN DECISIONS (from sdk-fixtures/$design_decisions):
- *
- * User display chain:
- *   host.user.given_name → host.user.name → host.user.email.split('@')[0] → "there"
- *
- * Tenant display chain:
- *   resourceAccess[0].tenantDisplayName
- *   → resourceAccess[0].tenantName
- *   → marketplaceAppTenantId.slice(-8)
- *   → "your tenant"
- *
- * source: project-planning/architecture/sdk-fixtures/host-user.json ($design_decisions)
- * source: project-planning/architecture/sdk-fixtures/application-context.json ($design_decisions)
- * capture-and-fix: update accessor chain per T014 .d.ts verification if divergent
+ * RED tests — written to FAIL until the defensive layered render lands, so the
+ * assertions are proven correct before the implementation exists.
+ * Display chains: docs/build-decisions.md#display-chains.
  */
 
 import { render, screen } from '@testing-library/react';

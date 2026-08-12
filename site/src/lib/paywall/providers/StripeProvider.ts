@@ -22,41 +22,17 @@ import { createClient } from '@supabase/supabase-js';
 const APP_SLUG = 'paywall-blueprint';
 
 /**
- * Suffix included in the Stripe idempotency key so it bumps when params change.
+ * ⚠ BUMP THIS whenever the SessionCreateParams shape changes. Stripe caches the
+ * FIRST request's params against an idempotency key and rejects a later request
+ * that reuses the key with different params; keys expire after 24h, so a stale
+ * hit blocks dev for a full day. The key is `${tenantId}:${this}`, so a bump
+ * mints a fresh key for every tenant.
  *
- * Stripe idempotency keys cache the FIRST request's params; subsequent requests
- * with the SAME key but DIFFERENT params are rejected with:
- *   "Keys for idempotent requests can only be used with the same parameters
- *    they were first used with."
- * Keys auto-expire after 24h, but during dev iteration a stale cache hit will
- * block you for that window.
+ * v1 no customer_update (failed automatic_tax) → v2 added customer_update →
+ * v3 cleared stale Live-mode keys after the Sandbox→Live switch.
  *
- * Bump this version constant whenever you change the SessionCreateParams shape
- * (added/removed/renamed fields, automatic_tax flip, customer_update change,
- * etc.). The idempotency key becomes `${tenantId}:${CHECKOUT_PARAMS_VERSION}`,
- * so a bump produces a fresh key for every tenant — Stripe re-runs the request
- * with the new params instead of returning the cached error.
- *
- * History:
- *   v1 — initial T011 shape (no customer_update; failed automatic_tax with
- *        customer_tax_location_invalid against real tenants)
- *   v2 — added customer_update: { address: 'auto', name: 'auto' }
- *   v3 — bump to clear stale Live-mode v2 keys after switching from Sandbox
- *        to Live (Sandbox and Live caches are separate; bumping here
- *        unblocks Live testing without waiting 24h for v2 keys to expire)
- *
- * Three-tier precedence (highest wins) for the effective version at request time:
- *   1. UI override — `version` field on the POST /api/checkout body. The
- *      useEntitlement hook reads it from `?paywall_version=<value>` in the
- *      browser URL (falling back to localStorage `paywall_version`). Lets the
- *      operator force a fresh idempotency key from the browser without
- *      touching env vars or redeploying.
- *   2. Env var — STRIPE_CHECKOUT_PARAMS_VERSION (set in Vercel / hosting
- *      project settings; Vercel auto-redeploys on env-var change, ~30s).
- *   3. Code default — the value of this constant.
- *
- * Resolution: `args.version ?? CHECKOUT_PARAMS_VERSION` at call time, where
- * CHECKOUT_PARAMS_VERSION is itself env-var-or-default at module init.
+ * Overridable per request and by env var — see
+ * docs/build-decisions.md#stripe-idempotency-version.
  */
 const CHECKOUT_PARAMS_VERSION =
   process.env.STRIPE_CHECKOUT_PARAMS_VERSION ?? 'v3';
