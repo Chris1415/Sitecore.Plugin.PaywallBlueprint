@@ -1,30 +1,13 @@
 /**
- * PaywallGate — FR-1 gate orchestration component.
+ * FR-1 gate. Resolves to one of four UX states in a fixed order: env-flag →
+ * context readiness → context validation (a missing tenantId THROWS, caught by
+ * the error boundary) → dev override → entitlement fetch → render.
  *
- * Resolves to one of four UX states by evaluating an EntitlementStore.
- * Per ADR-0008: consumes useAppContext() from MarketplaceProvider — provider
- * resolves before rendering children, so null-context is a belt-and-suspenders guard.
- * Per ADR-0011: PRD-000 evaluator only returns "allowed" | "tenant_no_subscription";
- * the seat-related variants are forward-compat (rendered here defensively).
- *
- * Props:
- *   children: React.ReactNode — rendered when entitlement is "allowed"
- *   store?: EntitlementStore — defaults to getDefaultStore() (SupabaseStore singleton)
- *   onStateChange?: (state) => void — fired once per resolved state
- *
- * FR-1 steps (numbered inline):
- *   1. Env-flag check — NEXT_PUBLIC_PAYWALL_ENABLED === "false" → render children verbatim
- *   2. Context-readiness — null/undefined context → SkeletonState
- *   3. Context validation — missing tenantId → THROW (error boundary catches)
- *   4. Dev-override (TODO: T041 wires this; Tranche C ships a stub)
- *   5. Entitlement fetch — useEffect + useState; pending → SkeletonState; reject → re-throw
- *   6. Render matching state component
+ * Two of the four states are forward-compat; the current evaluator returns only
+ * "allowed" and "tenant_no_subscription".
+ * See docs/build-decisions.md#paywall-gate-steps.
  *
  * shape: node_modules/@sitecore-marketplace-sdk/client/dist/index.d.ts → ApplicationContext
- * Verified 2026-05-13 against fixture project-planning/architecture/sdk-fixtures/application-context.json
- *
- * sitecore:blok-components — delegates rendering to state components in ./states/
- * T033 GREEN for T036a tests.
  */
 
 "use client";

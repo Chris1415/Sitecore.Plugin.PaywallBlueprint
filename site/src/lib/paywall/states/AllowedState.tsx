@@ -1,30 +1,11 @@
 /**
- * AllowedState — post-gate welcome component (FR-9 defensive layered render).
+ * Post-gate welcome. Reads useAppContext() + useHostUser() directly — the
+ * provider contract guarantees both are non-null by the time this renders.
  *
- * Extracted from components/gated-section.tsx (T031). All four state components
- * now live in src/lib/paywall/states/ as a self-contained portable library.
- *
- * Reads useAppContext() + useHostUser() directly — the MarketplaceProvider
- * contract guarantees both are non-null by the time this component renders.
- *
- * LOCKED DESIGN DECISIONS:
- *
- * User display chain (from sdk-fixtures/host-user.json $design_decisions):
- *   host.user.given_name → host.user.name → host.user.email.split('@')[0] → "there"
- *
- * Tenant display chain (from sdk-fixtures/application-context.json $design_decisions):
- *   resourceAccess[0].tenantDisplayName
- *   → resourceAccess[0].tenantName
- *   → marketplaceAppTenantId.slice(-8)
- *   → "your tenant"
+ * The user and tenant display chains are LOCKED decisions, not defensive
+ * coding — see docs/build-decisions.md#display-chains.
  *
  * shape: node_modules/@sitecore-marketplace-sdk/client/dist/index.d.ts → ApplicationContext
- * Verified 2026-05-13 against fixture project-planning/architecture/sdk-fixtures/application-context.json
- *
- * sitecore:blok-theming — text-primary for CircleCheck icon (positive/success state)
- * Lucide CircleCheck at text-primary, 32×32 per UI spec § 3.4.
- *
- * T031 GREEN for T037a-AllowedState tests.
  */
 
 "use client";

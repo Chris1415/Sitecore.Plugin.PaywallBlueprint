@@ -1,35 +1,10 @@
 /**
- * T049 — Recharts theme reactivity Playwright spec.
+ * Recharts theme reactivity.
  *
- * PRD-002 Tranche D — verify ActivityChart (P1) re-renders on theme flip
- * via the key={resolvedTheme} pattern on <ResponsiveContainer>.
- *
- * IMPORTANT: The /full-page route requires the Cloud Portal SDK handshake.
- * In standalone browser, MarketplaceProvider renders null until the SDK resolves.
- * These tests CANNOT fully verify the Recharts chart in isolation because
- * the unlocked premium state requires a real entitlement from the SDK host.
- *
- * What CAN be tested automatically here (standalone):
- *   1. The bento page loads without JS exceptions
- *
- * CANNOT be tested in standalone mode (SDK loading screen blocks Topbar):
- *   2. ThemeToggle is present in the topbar   — host-frame-required
- *   3. Theme toggle clicks don't produce errors — host-frame-required
- *
- * Full Recharts theme reactivity (SVG stroke color change) MUST be verified
- * manually at Gate D inside the Cloud Portal host frame, per
- * sitecore:marketplace-sdk-host-frame-testing skill.
- *
- * Documented for operator at Gate D:
- *   - Navigate to /full-page with valid entitlement (allowed state)
- *   - P1 ActivityChart SVG should be visible
- *   - Toggle theme Light → Dark → assert SVG <path> stroke color changes
- *   - key={resolvedTheme} on ResponsiveContainer forces Recharts remount
- *
- * If Playwright browsers are not installed in the current environment,
- * this spec will be skipped automatically (no browser). Run:
- *   npx playwright install chromium
- * before running e2e tests.
+ * ⚠ Standalone can only prove the page loads without exceptions — the unlocked
+ * premium state needs a real entitlement from the SDK host. The SVG stroke
+ * change on theme flip is verified by the operator in the Cloud Portal frame.
+ * See docs/build-decisions.md#host-frame-required.
  */
 
 import { test, expect } from "@playwright/test";
